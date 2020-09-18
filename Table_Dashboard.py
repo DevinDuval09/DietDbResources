@@ -5,7 +5,6 @@ import pandastable
 import pandas
 
 #The purpose of the dashboard is to display a given table when the appropriate
-#button is pushed
 
 #tkinter main form
 
@@ -19,9 +18,6 @@ root.title("DietDb")
 conx = pyodbc.connect("DRIVER={SQL SERVER NATIVE CLIENT 11.0};SERVER=(local);DATABASE=DietDb;Trusted_Connection=yes")
 cursor = conx.cursor()
 
-#initate table
-#display = pandastable.Table(frame,dataframe=data,showtoolbar=True,showstatusbar=True)
-#display.show()
 
 #function to set Sql Queries to display table
 query = pandas.read_sql('SELECT * FROM Food;',conx)
@@ -33,13 +29,6 @@ def DisplayTable(data):
 	new_query = pandas.read_sql('SELECT * FROM ' + data +';',conx)
 	display.model.df = new_query
 	display.redraw()
-
-
-	
-#sqlQuery = cursor.execute(sqlText)
-#results = sqlQuery.fetchall()
-
-
 
 #buttons for table display
 #some tables have disabled simply because of a lack of value in viewing them. Simply uncomment to reinstate.
