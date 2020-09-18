@@ -17,7 +17,7 @@ conx = pyodbc.connect("DRIVER={SQL SERVER NATIVE CLIENT 11.0};SERVER=(local);DAT
 cursor = conx.cursor()
 
 #drop down lists for inserting data
-foodNames = "SELECT CONCAT (FoodKey, ' ', Brand,' ', Name) FROM FOOD"
+foodNames = "SELECT CONCAT( Foodkey,' ',Brands.Brand,' ',Name) FROM Food INNER JOIN Brands ON Food.Brand=Brands.BrandKey UNION SELECT CONCAT(Foodkey,' ',' ',' ',Name) FROM Food WHERE Food.Brand IS NULL"
 cursor.execute(foodNames)
 foodStrings = cursor.fetchall()
 
