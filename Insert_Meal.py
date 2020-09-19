@@ -54,21 +54,22 @@ def InsertMeal():
 
 	#write sql statments
 	insertStatements = []
-	insertStatements.append("INSERT INTO Meals(MealsKey,Name) VALUES(" + pk + "," + name + ");")
+	insertStatements.append("INSERT INTO Meals(MealsKey,Name) VALUES(" + pk + ",'" + name + "');")
 	for ind in range(0,len(comboboxlist)):
 		insertStatements.append("INSERT INTO MealsFood(MealsKey,FoodKey,Quantity) VALUES(" + pk + "," + str(comboboxlist[ind].get().split()[0][2:]) + "," + str(entrylist[ind].get())+");")
+		
 	#insert statements into tables
 	for statement in insertStatements:
-		print(statement)
-		# cursor.execute(statement)
-		# conx.commit()
+		#print(statement) #(uncomment to debug SQL statements)
+		cursor.execute(statement)
+		conx.commit()
 
 #display meal calorie total on label
 def CalcCalories():
 	calCount = float(0)
 	for ind in range(0,len(comboboxlist)):
 		# get food index out of combo box
-		foodindex = comboboxlist[ind].get().split()[0][2:]
+		foodindex = comboboxlist[ind].get().split()[0][2:] #throwing error
 		sqlCalories = "SELECT Calories FROM FOOD WHERE Foodkey = " + str(foodindex) + ";"
 		cursor.execute(sqlCalories)
 		caloriesList = cursor.fetchall()
