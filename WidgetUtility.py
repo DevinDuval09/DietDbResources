@@ -22,19 +22,17 @@ def CreateFoodWidgets(root):
 	#combobox list of food
 	foodlist = ttk.Combobox(root, value = foodStrings)
 	foodlist.pack()
-	comboboxlist.append(foodlist)
 
 	#entry box for quantity
 	qtyEntry = ttk.Entry()
 	qtyEntry.pack()
-	entrylist.append(qtyEntry)
 
 	#label for calorie data
 	lblCalories = tkinter.Label(root)
 	lblCalories.pack()
 
 	#button to calculate and display info for line:
-	bCalories = ttk.button(root, text = "Calculate Calories")
+	bCalories = ttk.Button(root, text = "Calculate Calories")
 
 	def CalcCalories():
 		calCount = float(0)
@@ -50,6 +48,7 @@ def CreateFoodWidgets(root):
 		lblCalories.config(text = str(calCount))
 
 	bCalories.config(command=CalcCalories)
+	bCalories.pack()
 
 def CreateTable(frame,sql):
 	#create a table to display a given query
