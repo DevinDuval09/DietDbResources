@@ -48,6 +48,8 @@ bGoals = ttk.Button(root,text = 'Goals', command = lambda: DisplayTable('Goals')
 bGoals.pack()
 bMealsFood = ttk.Button(root, text = 'Meals Food', command = lambda:DisplayTable('MealsFood'))
 bMealsFood.pack()
+bMeals = ttk.Button(root,text = "Meals Food with meal and food names", command=lambda:DisplayQuery("SELECT Meals.Name,Food.Name,MealsFood.Quantity FROM MealsFood INNER JOIN Food ON MealsFood.FoodKey = Food.FoodKey INNER JOIN Meals ON Meals.Mealskey = MealsFood.MealsKey;"))
+bMeals.pack()
 
 
 
