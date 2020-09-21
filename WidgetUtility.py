@@ -1,0 +1,64 @@
+import tkinter
+from tkinter import ttk as ttk
+import pyodbc
+import pandastable
+import pandas
+import tkcalendar
+
+#Utility for creating widgets when necessary
+#DB connection
+conx = pyodbc.connect("DRIVER={SQL SERVER NATIVE CLIENT 11.0};SERVER=(local);DATABASE=DietDb;Trusted_Connection=yes")
+cursor = conx.cursor()
+
+#create Widgets
+def CreateFoodWidgets(root):
+	#create a new line of widgets to enter food into a table
+	#pass in root tkinter form
+	#sql query to get food list
+	foodNames = "SELECT CONCAT( Foodkey,' ',Brands.Brand,' ',Name) FROM Food INNER JOIN Brands ON Food.Brand=Brands.BrandKey UNION SELECT CONCAT(Foodkey,' ',' ',' ',Name) FROM Food WHERE Food.Brand IS NULL"
+	cursor.execute(foodNames)
+	foodStrings = cursor.fetchall()
+
+	#combobox list of food
+	foodlist = ttk.Combobox(root, value = foodStrings)
+	foodlist.pack()
+	comboboxlist.append(foodlist)
+
+	#entry box for quantity
+	qtyEntry = ttk.Entry()
+	qtyEntry.pack()
+	entrylist.append(qtyEntry)
+
+	#label for calorie data
+	lblCalories = tkinter.Label(root)
+	lblCalories.pack()
+
+	#button to calculate and display info for line:
+	bCalories = ttk.button(root, text = "Calculate Calories")
+
+	def CalcCalories():
+		calCount = float(0)
+		# get food index out of combo box
+		foodindex = foodlist.get().split()[0][2:]
+		sqlCalories = "SELECT Calories FROM FOOD WHERE Foodkey = " + str(foodindex) + ";"
+		cursor.execute(sqlCalories)
+		caloriesList = cursor.fetchall()
+		caloriesPer = float(caloriesList[0][0])
+		# get qty
+		qty = float(qtyEntry.get())
+		calCount = calCount + (caloriesPer * qty)
+		lblCalories.config(text = str(calCount))
+
+	bCalories.config(command=CalcCalories)
+
+def CreateTable(frame,sql):
+	#create a table to display a given query
+	query = pandas.read_sql(sql,conx)
+	display = pandastable.Table(frame,dataframe=query,showbartool=True,showstatusbar=True)
+	display.show()
+
+def UpdateTable(table,new_sql):
+	#Update an existing table with new sql query
+	new_query = pandas.read_sql(new_sql,conx)
+	table.model.df = new_query
+	table.redraw()
