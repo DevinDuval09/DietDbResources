@@ -11,7 +11,7 @@ conx = pyodbc.connect("DRIVER={SQL SERVER NATIVE CLIENT 11.0};SERVER=(local);DAT
 cursor = conx.cursor()
 
 #create Widgets
-def CreateFoodWidgets(root):
+def FoodWidgets(root,firstcolumn):
 	#create a new line of widgets to enter food into a table
 	#pass in root tkinter form
 	#sql query to get food list
@@ -21,15 +21,19 @@ def CreateFoodWidgets(root):
 
 	#combobox list of food
 	foodlist = ttk.Combobox(root, value = foodStrings)
-	foodlist.pack()
+	foodlist.grid(column=firstcolumn)
+	r = foodlist.grid_info()['row']
+	#foodlist.pack()
 
 	#entry box for quantity
 	qtyEntry = ttk.Entry()
-	qtyEntry.pack()
+	qtyEntry.grid(row = r,column = firstcolumn + 1)
+	#qtyEntry.pack()
 
 	#label for calorie data
 	lblCalories = tkinter.Label(root)
-	lblCalories.pack()
+	lblCalories.grid(row = r,column = firstcolumn + 2)
+	#lblCalories.pack()
 
 	#button to calculate and display info for line:
 	bCalories = ttk.Button(root, text = "Calculate Calories")
@@ -48,7 +52,8 @@ def CreateFoodWidgets(root):
 		lblCalories.config(text = str(calCount))
 
 	bCalories.config(command=CalcCalories)
-	bCalories.pack()
+	bCalories.grid(row=r,column = firstcolumn + 3)
+	#bCalories.pack()
 
 def CreateTable(frame,sql):
 	#create a table to display a given query
