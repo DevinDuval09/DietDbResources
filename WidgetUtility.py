@@ -11,8 +11,9 @@ conx = pyodbc.connect("DRIVER={SQL SERVER NATIVE CLIENT 11.0};SERVER=(local);DAT
 cursor = conx.cursor()
 
 #create Widgets
-def FoodWidgets(root,firstcolumn):
+def FoodWidgets(root,firstcolumn,includecheckbox=False,checkvariable=None):
 	#create a new line of widgets to enter food into a table
+	#if include checkbox = true, main code must pass in tkinter variable for checkvariable to use on checkbutton
 	#pass in root tkinter form
 	#sql query to get food list
 	foodNames = "SELECT CONCAT( Foodkey,' ',Brands.Brand,' ',Name) FROM Food INNER JOIN Brands ON Food.Brand=Brands.BrandKey UNION SELECT CONCAT(Foodkey,' ',' ',' ',Name) FROM Food WHERE Food.Brand IS NULL"
@@ -27,12 +28,12 @@ def FoodWidgets(root,firstcolumn):
 
 	#entry box for quantity
 	qtyEntry = ttk.Entry()
-	qtyEntry.grid(row = r,column = firstcolumn + 1)
+	qtyEntry.grid(row=r,column = firstcolumn + 1)
 	#qtyEntry.pack()
 
 	#label for calorie data
 	lblCalories = tkinter.Label(root)
-	lblCalories.grid(row = r,column = firstcolumn + 2)
+	lblCalories.grid(row=r,column = firstcolumn + 2)
 	#lblCalories.pack()
 
 	#button to calculate and display info for line:
@@ -53,7 +54,9 @@ def FoodWidgets(root,firstcolumn):
 
 	bCalories.config(command=CalcCalories)
 	bCalories.grid(row=r,column = firstcolumn + 3)
-	#bCalories.pack()
+
+	if includecheckbox == True:
+		check = ttk.Checkbutton(root,text = 'Consumed',onvalue=1,offvalue=0,variable=checkvariable).grid(row=r,column=firstcolumn + 4)
 
 def CreateTable(frame,sql):
 	#create a table to display a given query
