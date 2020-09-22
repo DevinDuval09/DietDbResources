@@ -10,29 +10,44 @@ import WidgetUtility as util
 
 #main form
 root = tkinter.Tk()
-root.geometry('400x600')
+root.geometry('800x600')
 frame = tkinter.Frame(root)
-frame.pack()
+frame.grid(column = 0,row=0)
 root.title("Food Eaten")
-
-util.CreateFoodWidgets(root)
-
-
 
 #Entry for date / data view
 cal = tkcalendar.Calendar(root,font="Arial 14", selectmode='day')
-cal.pack(fill="both", expand=False)
+cal.grid(column = 0, row = 0,columnspan = 4)
 
 #create widgets for data view/entry
-cbconsumedlist = []
-lblconsumedlist = []
-entrylist = []
+cmblist = []
+qtylist = []
+
+util.FoodWidgets(root, firstcolumn = 0)
+cmblist.append(root.grid_slaves(0,1))
+qtylist.append(root.grid_slaves(1,1))
 
 lEaten = ttk.Label()
 lPlanned = ttk.Label()
 lCaloriesEaten = ttk.Label()
 lCaloriesPlanned = ttk.Label()
 lCaloriesTotal = ttk.Label()
+
+def AddWidgets():
+	util.FoodWidgets(root,firstcolumn=0)
+	cmblist.append(root.grid_slaves(0,root.grid_size()[1]))
+	qtylist.append(root.grid_slaves(1,root.grid_size()[1]))
+
+
+def CalcCalories():
+	#column order:foodlist, qtyEntry,lblCalories,bCalc
+	pass
+	
+bAddFoodWidgets = ttk.Button(root,text="Add Entry Row",command=AddWidgets)
+bAddFoodWidgets.grid(row=0,column=5)
+bCalculate = ttk.Button(root,text="Total Entries",command=CalcCalories)
+bCalculate.grid(row=0,column=6)
+
 
 #sql statements to view food consumed that day
 
