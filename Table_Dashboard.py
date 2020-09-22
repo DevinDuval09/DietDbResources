@@ -30,6 +30,11 @@ def DisplayTable(data):
 	display.model.df = new_query
 	display.redraw()
 
+def DisplayQuery(sql):
+	new_query = pandas.read_sql(sql)
+	display.model.df = new_query
+	display.redraw()
+
 #buttons for table display
 #some tables have disabled simply because of a lack of value in viewing them. Simply uncomment to reinstate.
 # bAccuracey = ttk.Button(root,text = 'Accuracey Table',command=lambda: DisplayTable("Accuracey"))

@@ -5,6 +5,7 @@ import pandastable
 import pandas
 import tkcalendar
 import WidgetUtility as util
+import datetime as dt
 
 #tool to view, add, and edit food eaten
 
@@ -19,6 +20,28 @@ root.title("Food Eaten")
 cal = tkcalendar.Calendar(root,font="Arial 14", selectmode='day')
 cal.grid(column = 0, row = 0,columnspan = 4,rowspan=8)
 
+#DB connection
+conx = pyodbc.connect("DRIVER={SQL SERVER NATIVE CLIENT 11.0};SERVER=(local);DATABASE=DietDb;Trusted_Connection=yes")
+cursor = conx.cursor()
+
+#load any data entered for date
+def Load_data(date):
+	#sql statement to pull data
+	#get date key for date
+	sql_DateKey = "SELECT DateKey FROM Dates WHERE Date = CONVERT(Date,'{}',111)".format(date)
+	cursor.execute(sql_DateKey)
+	dateKey = cursor.fetchall()[0][0]
+	
+	#get all food loaded to day
+	sql_DateFood = ("SELECT Dates.Date,Brands.BrandKey,Food.Name,Food.Calories,FoodEaten.Quantity, FoodEaten.Consumed "
+					"FROM FoodEaten INNER JOIN Food ON Food.FoodKey = FoodEaten.FoodKey INNER JOIN Dates ON Dates.Datekey = FoodEaten.DateKey INNER JOIN "
+					"Brands ON Food.Brand = Brands.BrandKey WHERE FoodEaten.DateKey = {} "
+					"UNION SELECT Dates.Date, ' ', Food.Name,Food.Calories,FoodEaten.Quantity,FoodEaten.Consumed "
+					"FROM FoodEaten INNER JOIN Food ON Food.Foodkey = FoodEaten.Foodkey INNER JOIN Dates ON Dates.Datekey = FoodEaten.Datekey WHERE Food.Brand Is Null "
+					"AND FoodEaten.DateKey = {}".format(dateKey,dateKey))
+	data = cursor.execute(sql_DateFood).fetchall()
+	print(data)
+	#load data into widgets
 #create widgets for data view/entry
 cmblist = []
 qtylist = []
@@ -51,7 +74,7 @@ def AddWidgets():
 
 def CalcCalories():
 	#column order:foodlist, qtyEntry,lblCalories,bCalc,checkbox
-	pass
+	Load_data(dt.date.today())
 
 def Submit():
 	#submit all foods listed to database
