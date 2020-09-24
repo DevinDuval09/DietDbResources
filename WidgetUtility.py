@@ -12,7 +12,7 @@ cursor = conx.cursor()
 
 #create Widgets
 def FoodWidgets(root,firstcolumn,includecheckbox=False,checkvariable=None):
-	#create a new line of widgets to enter food into a table
+	#create a new line of widgets to enter food data into a table
 	#if include checkbox = true, main code must pass in tkinter variable for checkvariable to use on checkbutton
 	#pass in root tkinter form
 	#sql query to get food list
@@ -89,3 +89,33 @@ def UpdateTable(table,new_sql):
 	new_query = pandas.read_sql(new_sql,conx)
 	table.model.df = new_query
 	table.redraw()
+
+def InsertStatement(table,columns,values,datatypes):
+	#update db with given query
+	numberOfColumns = len(columns)
+	numberOfValues = len(values)
+	sqlStatement = "INSERT INTO {}(".format(table)
+
+	#iterate over column names and add columns to statement
+	for i in range(0,numberOfColumns-1):
+		sqlStatement = sqlStatement +"{},".format(columns[i])
+	sqlStatement = sqlStatement + "{}) VALUES(".format(columns[numberOfColumns-1])
+
+	#insert values into sql statement
+	for i in range(0,numberOfValues-1):
+		if datatypes[i] == 'string':
+			sqlStatement = sqlStatement + "'{}',".format(values[i])
+		elif datatypes[i] == 'date':
+			print('Now you need to implement a way to handle dates')
+		else:
+			sqlStatement = sqlStatement + "{},".format(values[i])
+	if datatypes[numberOfValues-1] == 'string':
+		sqlStatement = sqlStatement + "'{}');".format(values[numberOfValues-1])
+	elif datatypes[numberOfValues-1] == 'date':
+		print('implement date handler')
+	else:
+		sqlStatement = sqlStatement + "{});".format(values[numberOfValues-1])
+
+	cursor.execute(sqlStatement)
+	conx.commit()
+	
