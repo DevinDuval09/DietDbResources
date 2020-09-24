@@ -31,9 +31,19 @@ def FoodWidgets(root,firstcolumn,includecheckbox=False,checkvariable=None):
 	qtyEntry.grid(row=r,column = firstcolumn + 1)
 	#qtyEntry.pack()
 
-	#label for calorie data
+	#label for nutrional info
 	lblCalories = tkinter.Label(root)
-	lblCalories.grid(row=r,column = firstcolumn + 2)
+	lblCalories.grid(row=r,column = firstcolumn + 5)
+	lblProtein=tkinter.Label(root)
+	lblProtein.grid(row=r,column=firstcolumn+6)
+	lblCarbs=tkinter.Label(root)
+	lblCarbs.grid(row=r,column=firstcolumn+7)
+	lblTotalFat=tkinter.Label(root)
+	lblTotalFat.grid(row=r,column=firstcolumn+8)
+	lblSatFat=tkinter.Label(root)
+	lblSatFat.grid(row=r,column=firstcolumn+9)
+	lblFiber=tkinter.Label(root)
+	lblFiber.grid(row=r,column=firstcolumn+10)
 	#lblCalories.pack()
 
 	#button to calculate and display info for line:
@@ -43,17 +53,27 @@ def FoodWidgets(root,firstcolumn,includecheckbox=False,checkvariable=None):
 		calCount = float(0)
 		# get food index out of combo box
 		foodindex = foodlist.get().split()[0][2:]
-		sqlCalories = "SELECT Calories FROM FOOD WHERE Foodkey = " + str(foodindex) + ";"
+		sqlCalories = "SELECT Calories,Protein,Carbs,TotalFat,SatFat,Fiber FROM FOOD WHERE Foodkey = " + str(foodindex) + ";"
 		cursor.execute(sqlCalories)
 		caloriesList = cursor.fetchall()
 		caloriesPer = float(caloriesList[0][0])
+		proteinPer = float(caloriesList[0][1])
+		carbsPer = float(caloriesList[0][2])
+		totalFatPer=float(caloriesList[0][3])
+		satFatPer=float(caloriesList[0][4])
+		fiberPer = float(caloriesList[0][5])
 		# get qty
 		qty = float(qtyEntry.get())
 		calCount = calCount + (caloriesPer * qty)
-		lblCalories.config(text = str(calCount))
+		lblCalories.config(text = str(round(calCount,2)))
+		lblProtein.config(text=str(round(proteinPer*qty,2)))
+		lblCarbs.config(text=str(round(carbsPer*qty,2)))
+		lblTotalFat.config(text=str(round(totalFatPer*qty,2)))
+		lblSatFat.config(text=str(round(satFatPer*qty,2)))
+		lblFiber.config(text=str(round(fiberPer*qty,2)))
 
 	bCalories.config(command=CalcCalories)
-	bCalories.grid(row=r,column = firstcolumn + 3)
+	bCalories.grid(row=r,column = firstcolumn + 2)
 
 	if includecheckbox == True:
 		check = ttk.Checkbutton(root,text = 'Consumed',onvalue=1,offvalue=0,variable=checkvariable).grid(row=r,column=firstcolumn + 4)

@@ -11,7 +11,7 @@ import datetime as dt
 
 #main form
 root = tkinter.Tk()
-root.geometry('800x600')
+root.geometry('1000x600')
 frame = tkinter.Frame(root)
 frame.grid(column = 0,row=0)
 root.title("Food Eaten")
@@ -30,6 +30,73 @@ qtylist = []
 checklist = []
 checkvariables = []
 foodeatenkeys = []
+eatenLabels = []#order:calories,protein,carbs,totalfat,satfat
+plannedLabels=[]#calories,protein,carbs,totalfat,satfat
+totalLabels=[]
+
+#labels for nutrion columns
+lCalCol = ttk.Label(root,text='Calories').grid(row=7,column=5)
+lProtCol = ttk.Label(root,text='Protein').grid(row=7,column=6)
+lCarbsCol=ttk.Label(root,text='Carbs').grid(row=7,column=7)
+lTotFatCol=ttk.Label(root,text='Total Fat').grid(row=7,column=8)
+lSatFatcol=ttk.Label(root,text='Saturated Fat').grid(row=7,column=9)
+lFibercol = ttk.Label(root,text='Fiber').grid(row=7,column=10)
+#labels for totals summary
+lblTotals = tkinter.Label(root,text="Totals",).grid(row=0,column=6,columnspan=4,padx=20)
+lblPlanned = tkinter.Label(root,text='Planned').grid(row=1,column=7)
+lblEaten=tkinter.Label(root,text='Eaten').grid(row=1,column=8)
+lblTotalTotal=tkinter.Label(root,text='Total').grid(row=1,column=9)
+lblCalTot=tkinter.Label(root,text='Calories').grid(row=2,column=6)
+lblProtTot=tkinter.Label(root,text='Protein').grid(row=3,column=6)
+lblCarbsTot=tkinter.Label(root,text='Carbs').grid(row=4,column=6)
+lblTotFatTot=tkinter.Label(root,text='TotalFat').grid(row=5,column=6)
+lblSatFatTot=tkinter.Label(root,text='SatFat').grid(row=6,column=6)
+#labels for data
+lPlannedCal=tkinter.Label(root)
+lPlannedCal.grid(row=2,column=7)
+plannedLabels.append(lPlannedCal)
+lEatenCal = tkinter.Label(root)
+lEatenCal.grid(row=2,column=8)
+eatenLabels.append(lEatenCal)
+lTotalCal = tkinter.Label(root)
+lTotalCal.grid(row=2,column=9)
+lPlannedProt=tkinter.Label(root)
+lPlannedProt.grid(row=3,column=7)
+plannedLabels.append(lPlannedProt)
+lEatenProt=tkinter.Label(root)
+lEatenProt.grid(row=3,column=8)
+eatenLabels.append(lEatenProt)
+lTotalProt=tkinter.Label(root)
+lTotalProt.grid(row=3,column=9)
+lPlannedCarbs=tkinter.Label(root)
+lPlannedCarbs.grid(row=4,column=7)
+plannedLabels.append(lPlannedCarbs)
+lEatenCarbs=tkinter.Label(root)
+lEatenCarbs.grid(row=4,column=8)
+eatenLabels.append(lEatenCarbs)
+lTotalCarbs=tkinter.Label(root)
+lTotalCarbs.grid(row=4,column=9)
+lPlannedTF=tkinter.Label(root)
+lPlannedTF.grid(row=5,column=7)
+plannedLabels.append(lPlannedTF)
+lEatenTF=tkinter.Label(root)
+lEatenTF.grid(row=5,column=8)
+eatenLabels.append(lEatenTF)
+lTotalTF=tkinter.Label(root)
+lTotalTF.grid(row=5,column=9)
+lPlannedSF=tkinter.Label(root)
+lPlannedSF.grid(row=6,column=7)
+plannedLabels.append(lPlannedSF)
+lEatenSF=tkinter.Label(root)
+lEatenSF.grid(row=6,column=8)
+eatenLabels.append(lEatenSF)
+lTotalSF=tkinter.Label(root)
+lTotalSF.grid(row=6,column=9)
+totalLabels.append(lTotalCal)
+totalLabels.append(lTotalProt)
+totalLabels.append(lTotalCarbs)
+totalLabels.append(lTotalTF)
+totalLabels.append(lTotalSF)
 
 #load any data entered for date
 def Load_data(date):
@@ -77,24 +144,7 @@ def Load_data(date):
 			cmblist[r].config(state='disabled')
 			qtylist[r].config(state='disabled')
 			#checklist[r].config(state='disabled')
-
-	#load data into widgets
-#create widgets for data view/entry
-
-# var = tkinter.IntVar()
-# var.set(0)
-
-# util.FoodWidgets(root, firstcolumn = 0,includecheckbox=True,checkvariable=var)
-# cmblist.append(root.grid_slaves(8,0)[0])
-# qtylist.append(root.grid_slaves(8,1)[0])
-# checklist.append(root.grid_slaves(8,4)[0])
-# checkvariables.append(var)
-
-lEaten = ttk.Label()
-lPlanned = ttk.Label()
-lCaloriesEaten = ttk.Label()
-lCaloriesPlanned = ttk.Label()
-lCaloriesTotal = ttk.Label()
+	CalcCalories()
 
 def AddWidgets():
 	#add a row of widgets
@@ -108,9 +158,25 @@ def AddWidgets():
 	foodeatenkeys.append(None)
 
 def CalcCalories():
-	#column order:foodlist, qtyEntry,lblCalories,bCalc,checkbox
-	#Load_data(dt.date.today())
-	pass
+	#column order:foodlist, qtyEntry,bCalc,checkbox,calories,prot,carbs,totfat,satfat,fiber
+	planned_totals=[0,0,0,0,0]#calories,protein,carbs,totalfat,satfat
+	eaten_totals=[0,0,0,0,0]#calories,protein,carbs,totalfat,satfat
+	for i in range(0,len(cmblist)):
+		foodkey = cmblist[i].get().split()[0][2:]
+		sql_data="SELECT Calories,Protein,Carbs,TotalFat,SatFat FROM Food WHERE FoodKey = {}".format(foodkey)
+		rowdata = cursor.execute(sql_data).fetchall()
+		for x in range(0,len(eaten_totals)):
+			y = float(rowdata[0][x])
+			if int(checkvariables[i].get()) == 1:
+				eaten_totals[x] = round(eaten_totals[x] + (y*float(qtylist[i].get())),2)
+			else:
+				planned_totals[x] = round(planned_totals[x] + (y*float(qtylist[i].get())),2)
+
+	for i in range(0,len(eatenLabels)):
+		eatenLabels[i].config(text=str(eaten_totals[i]))
+		plannedLabels[i].config(text=str(planned_totals[i]))
+		totalLabels[i].config(text=str(round(planned_totals[i]+eaten_totals[i],2)))
+
 
 
 def Submit(date):
@@ -161,8 +227,5 @@ bGetFood.grid(row=2,column=5)
 bSubmit = ttk.Button(root,text="Submit Changes",command=lambda:Submit(cal.get_date())).grid(row=3,column=5)
 
 
-
-
-#submit button to add everything to database
 
 root.mainloop()
