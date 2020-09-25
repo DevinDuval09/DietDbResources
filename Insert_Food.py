@@ -24,8 +24,17 @@ query = pd.read_sql(sql,conx)
 display = table.Table(frame,dataframe=query)
 display.show()
 
-foodlist = Util.SQL_ComboBox(root,"SELECT FoodTypesKey, FoodType FROM FoodTypes ORDER BY FoodTypes.FoodType")
-foodlist.grid(column = 0)
+testRow = Util.LabelRow(root,root.grid_size()[0],2,['Food Type','Food Name'])
+
+WidRow = Util.RowOfWidgets(root,root.grid_size()[0])
+NameEntry = ttk.Entry(WidRow)
+foodtypelist = Util.SQL_ComboBox(WidRow,"SELECT FoodTypesKey, FoodType FROM FoodTypes ORDER BY FoodTypes.FoodType")
+
+WidRow.placeWidget(foodtypelist,0)
+WidRow.placeWidget(NameEntry,1)
+
+
+
 
 
 

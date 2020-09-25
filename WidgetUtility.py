@@ -120,10 +120,31 @@ def InsertStatement(table,columns,values,datatypes):
 	conx.commit()
 
 class SQL_ComboBox(ttk.Combobox):
-	def __init__(self,parent,sql,*args,**kw):
+	def __init__(self,parent,sql):
 		cursor.execute(sql)
 		droplist = cursor.fetchall()
-		ttk.Combobox.__init__(self,parent,values=droplist,*args,**kw)
+		ttk.Combobox.__init__(self,parent,values=droplist)
+
+class RowOfWidgets(tkinter.Frame):
+	def __init__(self,parent,row,*args,**kwargs):
+		tkinter.Frame.__init__(self,parent)
+		self.grid(row=row)
+		self.widgets = []
+	def placeWidget(self,widget,columnnumber):
+		self.widgets.append(widget)
+		widget.grid(row=0,column=columnnumber)
+
+
+class LabelRow(tkinter.Frame):
+	def __init__(self,parent,row,numberofcolumns,columnnames):
+		WidRow = RowOfWidgets(parent,row)
+		for i in range(0,numberofcolumns):
+			lbl = tkinter.Label(WidRow,text=columnnames[i])
+			lbl.grid(row=row,column=i)
+			WidRow.widgets.append(lbl)
+
+
+
 
 
 
