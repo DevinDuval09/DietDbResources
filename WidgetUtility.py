@@ -118,4 +118,13 @@ def InsertStatement(table,columns,values,datatypes):
 
 	cursor.execute(sqlStatement)
 	conx.commit()
+
+class SQL_ComboBox(ttk.Combobox):
+	def __init__(self,parent,sql,*args,**kw):
+		cursor.execute(sql)
+		droplist = cursor.fetchall()
+		ttk.Combobox.__init__(self,parent,values=droplist,*args,**kw)
+
+
+
 	
