@@ -24,18 +24,43 @@ query = pd.read_sql(sql,conx)
 display = table.Table(frame,dataframe=query)
 display.show()
 
-testRow = Util.LabelRow(root,root.grid_size()[0],2,['Food Type','Food Name'])
-
-WidRow = Util.RowOfWidgets(root,root.grid_size()[0])
-NameEntry = ttk.Entry(WidRow)
-foodtypelist = Util.SQL_ComboBox(WidRow,"SELECT FoodTypesKey, FoodType FROM FoodTypes ORDER BY FoodTypes.FoodType")
-
-WidRow.placeWidget(foodtypelist,0)
-WidRow.placeWidget(NameEntry,1)
+labels = Util.LabelRow(root,root.grid_size()[0],11,['FoodKey','Food Type','Measurement','Brand','Food Name','Calories Per','Protein Per','Carbs Per','Total Fat Per','Sat Fat Per','Fiber Per'])
 
 
+WidRow = Util.RowOfWidgets(root,root.grid_size()[0]+1)
+
+PKLabel = Util.NextKey_Label(WidRow,'Food',width=5)
+eMeasurement = ttk.Entry(WidRow,width=10)
+NameEntry = ttk.Entry(WidRow,width=10)
+foodtypelist = Util.SQL_ComboBox(WidRow,"SELECT FoodTypesKey, FoodType FROM FoodTypes ORDER BY FoodTypes.FoodType",width=10)
+brandlist = Util.SQL_ComboBox(WidRow,"SELECT BrandKey, Brand FROM Brands ORDER BY Brand",width=10)
+eCalories = ttk.Entry(WidRow,width=7)
+eProtein = ttk.Entry(WidRow,width=7)
+eCarbs = ttk.Entry(WidRow,width=7)
+eTotalFat = ttk.Entry(WidRow,width=7)
+eSatFat = ttk.Entry(WidRow,width=7)
+eFiber = ttk.Entry(WidRow,width=7)
+
+WidRow.placeWidget(PKLabel,0)
+WidRow.placeWidget(foodtypelist,1)
+WidRow.placeWidget(brandlist,2)
+WidRow.placeWidget(eMeasurement,3)
+WidRow.placeWidget(NameEntry,4)
+WidRow.placeWidget(eCalories,5)
+WidRow.placeWidget(eProtein,6)
+WidRow.placeWidget(eCarbs,7)
+WidRow.placeWidget(eTotalFat,8)
+WidRow.placeWidget(eSatFat,9)
+WidRow.placeWidget(eFiber,10)
+
+def SubmitData(values):
+	sql_insert = ("INSERT INTO Food('FoodKey','FoodType','Measurement','Brand','Name','Calories','Protein','Carbs','TotalFat','SatFat','Fiber') "
+					"VALUES({},{},'{}',{},'{}',{},{},{},{},{},{})".format(values[0],values[1],values[2],values[3],values[4],values[5],values[6],values[7],values[8],values[9],values[10]))
+	cursor.execute(sql_insert)
+	conx.commit()
 
 
+bSubmit = ttk.Button(root,text='Submit',command=SubmitData)
 
 
 root.mainloop()

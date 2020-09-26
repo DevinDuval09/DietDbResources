@@ -4,6 +4,7 @@ import pyodbc
 import pandastable
 import pandas
 import tkcalendar
+import math
 
 #Utility for creating widgets when necessary
 #DB connection
@@ -120,23 +121,35 @@ def InsertStatement(table,columns,values,datatypes):
 	conx.commit()
 
 class SQL_ComboBox(ttk.Combobox):
-	def __init__(self,parent,sql):
+	def __init__(self,parent,sql,*args,**kwargs):
 		cursor.execute(sql)
 		droplist = cursor.fetchall()
 		ttk.Combobox.__init__(self,parent,values=droplist)
+
+class NextKey_Label(ttk.Label):
+	def __init__(self,parent,table,*args,**kwargs):
+		sql_getpkcolumn = "EXEC sp_pkeys {}".format(table)
+		keydata = cursor.execute(sql_getpkcolumn).fetchall()
+		sql_getpklist = "SELECT {} FROM {} ORDER BY {} DESC".format(keydata[0][3],table,keydata[0][3])
+		nextpk = cursor.execute(sql_getpklist).fetchone()[0]+1
+		ttk.Label.__init__(self,parent,text = str(nextpk),state='disabled')
 
 class RowOfWidgets(tkinter.Frame):
 	def __init__(self,parent,row,*args,**kwargs):
 		tkinter.Frame.__init__(self,parent)
 		self.grid(row=row)
 		self.widgets = []
+		self.config(height=parent.winfo_height(),width=parent.winfo_width())
 	def placeWidget(self,widget,columnnumber):
 		self.widgets.append(widget)
 		widget.grid(row=0,column=columnnumber)
+	def centerWidgets(self,numberofcolumns):
+		for w in self.widgets:
+			w.config(width=(math.floor(self.winfo_width()/numberofcolumns)))
 
 
 class LabelRow(tkinter.Frame):
-	def __init__(self,parent,row,numberofcolumns,columnnames):
+	def __init__(self,parent,row,numberofcolumns,columnnames,*args,**kwargs):
 		WidRow = RowOfWidgets(parent,row)
 		for i in range(0,numberofcolumns):
 			lbl = tkinter.Label(WidRow,text=columnnames[i])
