@@ -9,33 +9,34 @@ import WidgetUtility as Util
 import pyodbc
 import tkcalendar
 
-class SelectUser():
-	def __init__(self):
-		#select user
-		root = tkinter.Tk()
-		root.title("Select User")
-		root.geometry('400x400')
-		ldirections = ttk.Label(root,text='Select a user').grid(column=0)
-		user = SQLBox(root,"SELECT UserID,FirstName,LastName FROM Users")
-		user.grid(column=0)
+root = tkinter.Tk()
+root.geometry('800x600')
+frame=tkinter.Frame(root)
+frame.grid(column=0)
 
-		def Submit():
-			userid = user.get().split(',')[0][1:]
+ldirections = ttk.Label(frame,text='Select a user').grid(column=0)
+user = SQLBox(frame,"SELECT UserID,FirstName,LastName FROM Users")
+user.grid(column=0)
+
+UserID = None
+
+def Submit():
+	UserID = user.get().split(',')[0][1:]
+	for w in frame.winfo_children():
+		w.destroy()
+	goals = GoalsForm(UserID,frame)
 			
 
-		bSubmit = ttk.Button(root,text='Select',command=Submit).grid(column=0)
+bSubmit = ttk.Button(frame,text='Select',command=Submit).grid(column=0)
 
-		root.mainloop()
 
 class GoalsForm():
-	def __init__(self,UserID):
-		root = tkinter.Tk()
-		root.geometry('1000x600')
-		root.title("Goals")
+	def __init__(self,UserID,frame):
+		user = UserID
 
 		#Entry for date / data view
-		cal = tkcalendar.Calendar(root,font="Arial 14", selectmode='day')
+		cal = tkcalendar.Calendar(frame,font="Arial 14", selectmode='day')
 		cal.grid(column = 0, row = 0,columnspan = 4,rowspan=8)
 
-getuser = SelectUser()
-getuser.__init__
+
+root.mainloop()
