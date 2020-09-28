@@ -131,8 +131,10 @@ class NextKey_Label(ttk.Label):
 		sql_getpkcolumn = "EXEC sp_pkeys {}".format(table)
 		keydata = cursor.execute(sql_getpkcolumn).fetchall()
 		sql_getpklist = "SELECT {} FROM {} ORDER BY {} DESC".format(keydata[0][3],table,keydata[0][3])
-		nextpk = cursor.execute(sql_getpklist).fetchone()[0]+1
-		ttk.Label.__init__(self,parent,text = str(nextpk),state='disabled')
+		self.nextpk = cursor.execute(sql_getpklist).fetchone()[0]+1
+		ttk.Label.__init__(self,parent,text = str(self.nextpk),state='disabled')
+	def get(self):
+		return self.nextpk
 
 class RowOfWidgets(tkinter.Frame):
 	def __init__(self,parent,row,*args,**kwargs):

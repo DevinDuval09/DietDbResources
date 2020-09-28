@@ -43,8 +43,8 @@ eFiber = ttk.Entry(WidRow,width=7)
 
 WidRow.placeWidget(PKLabel,0)
 WidRow.placeWidget(foodtypelist,1)
-WidRow.placeWidget(brandlist,2)
-WidRow.placeWidget(eMeasurement,3)
+WidRow.placeWidget(eMeasurement,2)
+WidRow.placeWidget(brandlist,3)
 WidRow.placeWidget(NameEntry,4)
 WidRow.placeWidget(eCalories,5)
 WidRow.placeWidget(eProtein,6)
@@ -53,14 +53,28 @@ WidRow.placeWidget(eTotalFat,8)
 WidRow.placeWidget(eSatFat,9)
 WidRow.placeWidget(eFiber,10)
 
-def SubmitData(values):
-	sql_insert = ("INSERT INTO Food('FoodKey','FoodType','Measurement','Brand','Name','Calories','Protein','Carbs','TotalFat','SatFat','Fiber') "
+values = []
+
+def SubmitData():
+	for w in range(0,len(WidRow.widgets)):
+		if len(str(WidRow.widgets[w].get()))==0:
+			values.append('NULL')
+		elif WidRow.widgets[w].winfo_class()=='TCombobox':
+			values.append(WidRow.widgets[w].get().split(',')[0][1:])
+		elif WidRow.widgets[w].winfo_class()=='TLabel':
+			values.append(WidRow.widgets[w].get())
+		else:
+			values.append(WidRow.widgets[w].get())
+	sql_insert = ("INSERT INTO Food(FoodKey,FoodType,Measurement,Brand,Name,Calories,Protein,Carbs,TotalFat,SatFat,Fiber) "
 					"VALUES({},{},'{}',{},'{}',{},{},{},{},{},{})".format(values[0],values[1],values[2],values[3],values[4],values[5],values[6],values[7],values[8],values[9],values[10]))
 	cursor.execute(sql_insert)
 	conx.commit()
+	#print(sql_insert)
+	conx.close()
 
 
 bSubmit = ttk.Button(root,text='Submit',command=SubmitData)
+bSubmit.grid(column=0)
 
 
 root.mainloop()
