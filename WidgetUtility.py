@@ -172,8 +172,7 @@ class DataDisplay(tkinter.Frame):
 			data=datalists[t]
 			for i in range(0,len(data)):
 				datapoint = data[i]
-				print(type(datapoint))
-				if (type(data[i]) == 'int') or (type(data[i]) == 'float') or (type(data[i]) == 'complex'):#not working
+				if (type(data[i]) is int) or (type(data[i]) is float) or (type(data[i]) is complex):
 					datapoint = round(datapoint,2)
 
 				if iterable == 'row':
