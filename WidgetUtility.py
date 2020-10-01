@@ -158,6 +158,35 @@ class LabelRow(tkinter.Frame):
 			lbl.grid(row=row,column=i)
 			WidRow.widgets.append(lbl)
 
+class DataDisplay(tkinter.Frame):
+	#puts some data into a series of rows or columns using tkinter labels and a tkinter frame. First submission should be labels
+	def __init__(self,parent,*datalists,orientation='vertical'):
+		tkinter.Frame.__init__(self,parent)
+		iterable = None
+		if orientation=='vertical':
+			iterable = 'row'
+		else:
+			iterable='column'
+
+		for t in range(0,len(datalists)):
+			data=datalists[t]
+			for i in range(0,len(data)):
+				datapoint = data[i]
+				print(type(datapoint))
+				if (type(data[i]) == 'int') or (type(data[i]) == 'float') or (type(data[i]) == 'complex'):#not working
+					datapoint = round(datapoint,2)
+
+				if iterable == 'row':
+					lbl=tkinter.Label(self,text=str(datapoint))
+					lbl.grid(row=i,column=t)
+				else:
+					lbl=tkinter.Label(self,text=str(datapoint))
+					lbl.grid(row=t,column=i)
+
+
+
+
+
 
 
 
