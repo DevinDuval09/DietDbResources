@@ -117,11 +117,8 @@ class GoalsForm():
 			array.append(daily)
 			return array
 
-		olddailygoals = SetWeek()
-		
-
-		display = Util.DataDisplay(frame,('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'),olddailygoals)
-		display.grid(column=0)
+		targets = Util.Targets(int(UserID),10,6)
+		targets.displayTargets(frame)
 
 
 		bCalc = ttk.Button(frame,text="Calculate Calorie Requirements",command=lambda:UpdateReq(cmbGoal.get().split(",")[0][1:],float(eMultiplier.get()),lCalReq))
