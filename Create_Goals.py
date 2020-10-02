@@ -112,14 +112,15 @@ class GoalsForm():
 			array.append(daily-400)
 			array.append(daily+400)
 			array.append(daily)
-			array.append(daily + 200)
-			array.append(daily - 200)
+			array.append(daily -200)
+			array.append(daily +200)
 			array.append(daily)
 			return array
 
-		dailygoals = SetWeek()
+		olddailygoals = SetWeek()
+		
 
-		display = Util.DataDisplay(frame,('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'),dailygoals)
+		display = Util.DataDisplay(frame,('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'),olddailygoals)
 		display.grid(column=0)
 
 

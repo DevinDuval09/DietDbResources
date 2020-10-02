@@ -182,6 +182,57 @@ class DataDisplay(tkinter.Frame):
 					lbl=tkinter.Label(self,text=str(datapoint))
 					lbl.grid(row=t,column=i)
 
+class Targets():
+	#get,set, and display goal cycles
+	def __init__(self,userid,startdateid,days=6):
+		self.user = userid
+		self.startdate = startdateid
+		self.cycleStrings = ('avg','lowest','highest','avg','low','high','avg')
+		self.cycleKeys = (1,2,3,1,4,5,1)
+		sql_currentweek = "SELECT DateKey,TargetType,TotalCalories,TotalGramsProtein FROM Goals WHERE DateKey BETWEEN {} AND {} AND UserID = {}".format(str(startdateid),str(startdateid+days),str(self.user))
+		self.weeksdata = cursor.execute(sql_currentweek).fetchall()
+		self.scheduledCalories = []
+		self.scheduledCycle = []
+		self.scheduledProtein = []
+		for i in self.weeksdata:
+			self.scheduledCalories.append(i[2])
+			self.scheduledCycle.append(i[1])
+			self.scheduledProtein.append(i[3])
+	def updateCalorieTargets(self,newaverage,resetcycle = False):
+		updatevalues = []#new values to be inserted into Goals table
+		date = self.startdate#dateid
+		if not resetcycle:
+			for day in self.scheduledCycle:
+				if day == 1:
+					updatevalues.append(newaverage)
+				elif day ==2:
+					updatevalues.append(newaverage-400)
+				elif day ==3:
+					updatevalues.append(newaverage+400)
+				elif day ==4:
+					updatevalues.append(newaverage-200)
+				elif day ==5:
+					updatevalues.append(newaverage+200)
+			else:
+				updatevalues=[newaverage,newaverage-400,newaverage+400,newaverage,newaverage-200,newaverage+200,newaverage]
+		for i in updatevalues:
+			sql = "UPDATE Goals SET TotalCalories={} WHERE DateKey = {} AND UserID = {}".format(str(i),str(date),str(self.user))
+			#print(sql)
+			cursor.execute(sql)
+			conx.commit()
+			date = date + 1
+	def displayTargets(frame):
+		targetsql = ''
+		display = DataDisplay()#need to pull text for dates,text for targettype
+
+
+		
+		
+
+
+
+
+
 
 
 
