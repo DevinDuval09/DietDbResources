@@ -235,12 +235,12 @@ class Targets():
 		dateData = cursor.execute(targetsql).fetchall()
 		days = []
 		calories = []
-		counter = 0
+		cnter = 0
 
 		for i in sqlData:
 			days.append(str(i[0]) + ' ' + str(i[1]) + ' ' + str(i[2]) + ' ' + str(i[3]))
-			calories.append(str(self.scheduledCalories[counter])
-			counter = counter + 1
+			calories.append(str(self.scheduledCalories[cnter]))
+			cnter = cnter + 1
 
 		display = DataDisplay(root,days,calories)
 		display.grid(column=0)
