@@ -185,13 +185,14 @@ class DataDisplay(tkinter.Frame):
 class Targets():
 	#get,set, and display goal cycles
 	def __init__(self,userid,startdateid,days=6):
-		self.user = userid
 		self.startdate = startdateid
 		self.days = days
 		self.cycleStrings = ('avg','lowest','highest','avg','low','high','avg')
 		self.cycleKeys = (1,2,3,1,4,5,1)
-		sql_currentweek = "SELECT DateKey,TargetType,TotalCalories,TotalGramsProtein FROM Goals WHERE DateKey BETWEEN {} AND {} AND UserID = {}".format(str(startdateid),str(startdateid+self.days),str(self.user))
+		sql_currentweek = "SELECT DateKey,TargetType,TotalCalories,TotalGramsProtein FROM Goals WHERE DateKey BETWEEN {} AND {} AND UserID = {}".format(str(startdateid),str(startdateid+self.days),str(userid))
 		self.weeksdata = cursor.execute(sql_currentweek).fetchall()
+		sql_userdata = "SELECT * FROM Users WHERE UserID = {}".format(userid)
+		self.userdata = cursor.execute(sql_userdata).fetchall()[0]
 		self.scheduledCalories = []
 		self.scheduledCycle = []
 		self.scheduledProtein = []
@@ -199,7 +200,7 @@ class Targets():
 			self.scheduledCalories.append(i[2])
 			self.scheduledCycle.append(i[1])
 			self.scheduledProtein.append(i[3])
-	def updateCalorieTargets(self,newaverage,resetcycle = False):
+	def changeCalorieTargets(self,newaverage,resetcycle = False,updatelabels = False,root=None):
 		updatevalues = []#new values to be inserted into Goals table
 		date = self.startdate#dateid
 		if not resetcycle:
@@ -217,24 +218,31 @@ class Targets():
 		else:
 			updatevalues=[newaverage,newaverage-400,newaverage+400,newaverage,newaverage-200,newaverage+200,newaverage]
 
-		for i in updatevalues:
-			sql = "UPDATE Goals SET TotalCalories={} WHERE DateKey = {} AND UserID = {}".format(str(i),str(date),str(self.user))
+		self.scheduledCalories = updatevalues
+
+		if updatelabels:
+			self.displayTargets(root)
+	def submitChanges(self):
+		date = self.startdate
+		for i in self.scheduledCalories:
+			sql = "UPDATE Goals SET TotalCalories={} WHERE DateKey = {} AND UserID = {}".format(str(i),str(date),str(self.userdata[0]))
 			#print(sql)
 			cursor.execute(sql)
 			conx.commit()
 			date = date + 1
 	def displayTargets(self,root):
-		targetsql = ("SELECT Dates.WeekDayName,Dates.DOWInMonth,Dates.MonthName,Dates.Year,Goals.TotalCalories FROM Goals "
-		 "INNER JOIN Dates ON Goals.DateKey=Dates.DateKey WHERE Goals.UserID = {} AND Goals.DateKey BETWEEN {} AND {}".format(self.user,self.startdate,self.startdate+self.days))
-		sqlData = cursor.execute(targetsql).fetchall()
+		targetsql = ("SELECT Dates.WeekDayName,Dates.DOWInMonth,Dates.MonthName,Dates.Year, WHERE DateKey BETWEEN {} AND {}".format(self.startdate,self.startdate+self.days))
+		dateData = cursor.execute(targetsql).fetchall()
 		days = []
 		calories = []
+		counter = 0
 
 		for i in sqlData:
 			days.append(str(i[0]) + ' ' + str(i[1]) + ' ' + str(i[2]) + ' ' + str(i[3]))
-			calories.append(i[4])
+			calories.append(str(self.scheduledCalories[counter])
+			counter = counter + 1
 
-		display = DataDisplay(root,days,calories)#need to pull text for dates,text for targettype
+		display = DataDisplay(root,days,calories)
 		display.grid(column=0)
 
 		
