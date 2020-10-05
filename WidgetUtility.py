@@ -203,6 +203,7 @@ class Targets():
 	def changeCalorieTargets(self,newaverage,resetcycle = False,updatelabels = False,root=None):
 		updatevalues = []#new values to be inserted into Goals table
 		date = self.startdate#dateid
+		updatecycle = []
 		if not resetcycle:
 			for day in self.scheduledCycle:
 				if day == 1:
@@ -215,13 +216,17 @@ class Targets():
 					updatevalues.append(newaverage-200)
 				elif day ==5:
 					updatevalues.append(newaverage+200)
+			updatecycle = self.scheduledCycle
 		else:
 			updatevalues=[newaverage,newaverage-400,newaverage+400,newaverage,newaverage-200,newaverage+200,newaverage]
+			updatecycle = [1,2,3,1,4,5,1]
 
 		self.scheduledCalories = updatevalues
 
 		if updatelabels:
 			self.displayTargets(root)
+		if resetcycle:
+			self.scheduledCycle = updatecycle
 	def submitChanges(self):
 		date = self.startdate
 		for i in self.scheduledCalories:
@@ -231,13 +236,13 @@ class Targets():
 			conx.commit()
 			date = date + 1
 	def displayTargets(self,root):
-		targetsql = ("SELECT Dates.WeekDayName,Dates.DOWInMonth,Dates.MonthName,Dates.Year, WHERE DateKey BETWEEN {} AND {}".format(self.startdate,self.startdate+self.days))
+		targetsql = ("SELECT Dates.WeekDayName,Dates.DOWInMonth,Dates.MonthName,Dates.Year FROM Dates WHERE DateKey BETWEEN {} AND {}".format(self.startdate,self.startdate+self.days))
 		dateData = cursor.execute(targetsql).fetchall()
 		days = []
 		calories = []
 		cnter = 0
 
-		for i in sqlData:
+		for i in dateData:
 			days.append(str(i[0]) + ' ' + str(i[1]) + ' ' + str(i[2]) + ' ' + str(i[3]))
 			calories.append(str(self.scheduledCalories[cnter]))
 			cnter = cnter + 1
@@ -245,7 +250,25 @@ class Targets():
 		display = DataDisplay(root,days,calories)
 		display.grid(column=0)
 
-		
+class DateInfo():
+	#cal.get_date formats to mm/dd/yy
+	def __init__(self,sql: str):
+		self.data = cursor.execute(sql).fetchall()[0]
+
+	@classmethod
+	def initFromDateID(cls,ID: int) -> 'DateInfo':
+		sql = "SELECT * FROM Dates WHERE DateKey = {}".format(str(ID))
+		return cls(sql)
+
+	@classmethod
+	def initFromDate(cls,datestring: str) -> 'DateInfo':
+		from datetime import date
+		dt = datestring.split('/')
+		year = int('20'+str(dt[2]))
+		month = int(dt[0])
+		day = int(dt[1])
+		sql = "SELECT * FROM Dates WHERE Date = CONVERT(Date,'{}',111)".format(date(year,month,day))
+		return cls(sql)
 		
 
 

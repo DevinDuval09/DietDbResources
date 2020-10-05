@@ -71,6 +71,9 @@ class GoalsForm():
 		eWeight.insert(0,str(weightinfo[2]))
 
 		lHeight = ttk.Label(frame,text = "Height: \n {}'".format(str(int(userdata[5]/12)))+'{}"'.format(str(userdata[5]%12))).grid(column = 8, row = 0, rowspan=2)
+
+		targets = Util.Targets(int(UserID),10,6)
+		targets.displayTargets(frame)
 		
 		dt = cal.get_date().split('/')
 		year = int('20'+dt[2])
@@ -117,12 +120,13 @@ class GoalsForm():
 			array.append(daily)
 			return array
 
-		targets = Util.Targets(int(UserID),10,6)
-		targets.displayTargets(frame)
-
 
 		bCalc = ttk.Button(frame,text="Calculate Calorie Requirements",command=lambda:UpdateReq(cmbGoal.get().split(",")[0][1:],float(eMultiplier.get()),lCalReq))
 		bCalc.grid(column=0)
+
+		test = Util.DateInfo.initFromDate(cal.get_date())
+
+		print(test.data)
 
 		#Calculate the 7 day calorie cycle
 		#display the cycle using the DataDisplay class from Utils
