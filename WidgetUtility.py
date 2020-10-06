@@ -189,7 +189,7 @@ class Targets():
 		self.days = days
 		self.cycleStrings = ('avg','lowest','highest','avg','low','high','avg')
 		self.cycleKeys = (1,2,3,1,4,5,1)
-		sql_currentweek = "SELECT DateKey,TargetType,TotalCalories,TotalGramsProtein FROM Goals WHERE DateKey BETWEEN {} AND {} AND UserID = {}".format(str(startdateid),str(startdateid+self.days),str(userid))
+		sql_currentweek = "SELECT DateKey,TargetType,TotalCalories,TotalGramsProtein FROM Goals WHERE DateKey BETWEEN {} AND {} AND UserID = {}".format(str(startdateid),str(int(startdateid)+self.days),str(userid))
 		self.weeksdata = cursor.execute(sql_currentweek).fetchall()
 		sql_userdata = "SELECT * FROM Users WHERE UserID = {}".format(userid)
 		self.userdata = cursor.execute(sql_userdata).fetchall()[0]
@@ -275,6 +275,110 @@ class DateInfo():
 			day = int(dt[1])
 			sqlStatements.append("SELECT * FROM Dates WHERE Date = CONVERT(Date,'{}',111)".format(date(year,month,day)))
 		return cls(sqlStatements)
+
+class User():
+	def __init__(self,ID):
+		data = cursor.execute("SELECT * FROM Users WHERE UserID = {}".format(ID)).fetchall()[0]
+		self._ID = ID
+		self._FirstName = data[1]
+		self._LastName = data[2]
+		self._Birthday = data[3]
+		self._Gender = data[4]
+		self._Height = data[5]
+		newdata = cursor.execute("SELECT * FROM UsersWeight WHERE UserID = {} ORDER BY Date Desc".format(self.ID)).fetchall()[0]
+		self._MostRecentDate = cursor.execute("SELECT * FROM Dates WHERE DateKey = {}".format(newdata[1])).fetchall()[0]
+		self._Weight = newdata[2]
+		self._Activity = newdata[3]
+		self._Goal = newdata[4]
+
+	def Age(self,date):
+		#function to calcuate age
+		from datetime import date as dt
+		from datetime import datetime
+		dt = datetime.strptime(date,'%m/%d/%y')
+		
+		if dt.month >= self._Birthday.month and dt.day >= self._Birthday.day:
+			return (int(dt.year - self._Birthday.year)+1)
+		else:
+			return (int(dt.year - self._Birthday.year))
+
+	def CalcBMR(self,date):
+		inchCmConversion = 2.54
+		lbsKGConversion = (1/2.205)
+		if self._Gender == 'm':
+			return (10*float(self._Weight)*lbsKGConversion)+(6.25*float(self._Height)*inchCmConversion)-(5*self.Age(date))+5
+		else:
+			return (10*float(self._Weight)*lbsKGConversion)+(6.25*float(self._Height)*inchCmConversion)-(5*self.Age(date))-161
+
+	def CalcCalories(self):
+			#weight changes assume safe gain/loss based on 1 lbs week, = 3500 calorie surplus/deficit per week
+		base = CalcBMR() * self._Activity
+		if int(self._Goal) == 1:
+			return base + 500
+		elif int(self._Goal) == 2:
+			return base - 500
+		elif int(self._Goal) ==3:
+			return base
+		else:
+			print(self._Goal)
+
+	@property
+	def ID(self):
+		return self._ID
+	@property
+	def FirstName(self):
+		return self._FirstName
+	@property
+	def LastName(self):
+		return self._LastName
+	@property
+	def Birthday(self):
+		return self._Birthday
+	@property
+	def Gender(self):
+		return self._Gender
+	@property
+	def Height(self):
+		return self._Height
+	@property
+	def MostRecentDate(self):
+		return self._MostRecentDate
+	@property
+	def Weight(self):
+		return self._Weight
+	@property
+	def Activity(self):
+		return self._Activity
+	@property
+	def Goal(self):
+		return self._Goal
+	@MostRecentDate.setter
+	def MostRecentDate(self,date):
+		self._MostRecentDate = date
+	@Weight.setter
+	def Weight(self,weight):
+		self._Weight = weight
+	@Activity.setter
+	def Activity(self,activity):
+		self._Activity = activity
+	@Goal.setter
+	def Goal(self,GoalID):
+		self._Goal = GoalID
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
 		
 
 
