@@ -252,23 +252,29 @@ class Targets():
 
 class DateInfo():
 	#cal.get_date formats to mm/dd/yy
-	def __init__(self,sql: str):
-		self.data = cursor.execute(sql).fetchall()[0]
+	def __init__(self,sqllist):
+		self.data = []
+		for s in sqllist:
+			self.data.append(cursor.execute(s).fetchall()[0])
 
 	@classmethod
-	def initFromDateID(cls,ID: int) -> 'DateInfo':
-		sql = "SELECT * FROM Dates WHERE DateKey = {}".format(str(ID))
-		return cls(sql)
+	def initFromDateID(cls,*ID) -> 'DateInfo':
+		sqlStatements = []
+		for i in ID:
+			sqlStatements.append("SELECT * FROM Dates WHERE DateKey = {}".format(str(i)))
+		return cls(sqlStatements)
 
 	@classmethod
-	def initFromDate(cls,datestring: str) -> 'DateInfo':
+	def initFromDate(cls,*datestring) -> 'DateInfo':
 		from datetime import date
-		dt = datestring.split('/')
-		year = int('20'+str(dt[2]))
-		month = int(dt[0])
-		day = int(dt[1])
-		sql = "SELECT * FROM Dates WHERE Date = CONVERT(Date,'{}',111)".format(date(year,month,day))
-		return cls(sql)
+		sqlStatements = []
+		for d in datestring:
+			dt = d.split('/')
+			year = int('20'+str(dt[2]))
+			month = int(dt[0])
+			day = int(dt[1])
+			sqlStatements.append("SELECT * FROM Dates WHERE Date = CONVERT(Date,'{}',111)".format(date(year,month,day)))
+		return cls(sqlStatements)
 		
 
 
