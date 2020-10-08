@@ -11,9 +11,11 @@ cursor = conx.cursor()
 
 #Create date range to insert
 sqlStatements = []
-dateseed = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
+dateseed = datetime.date.today()
+nextkey = cursor.execute("SELECT DateKey FROM Dates ORDER BY DateKey DESC").fetchone()[0]+1
 
 for d in range(0,31):
+	nextkey = nextkey + d
 	dt = dateseed + datetime.timedelta(days=d)
 	date = dt.strftime("%x")
 	daysuffix = dt.strftime("%a")[0:2]
@@ -38,7 +40,7 @@ for d in range(0,31):
 	IsWeekend = 0
 	if(weekdayshort == "Sun" or weekdayshort == "Sat"): IsWeekend = 1
 
-	sqlStatements.append("INSERT INTO Dates VALUES(" + str(d) + ", CONVERT(DATE,'" + str(date) + "',1),'" + daysuffix + 
+	sqlStatements.append("INSERT INTO Dates VALUES(" + str(nextkey) + ", CONVERT(DATE,'" + str(date) + "',1),'" + daysuffix + 
 		"'," + weekdaynum + ",'" + weekdayname + "','" + weekdayshort + "','" + weekdayfirst + "'," + DOWinMonth + ","
 		+ DOY + "," + WeekOfMonth + "," + WeekOfYear + "," + MonthNum + ",'" + MonthName + "','" + MonthNameShort + "','" 
 		+ MonthNameLetter + "'," + Quarter + ",'" + QuarterName + "'," + Year + ",'" + MMYYYY + "','" + MonthYear +"',"+
