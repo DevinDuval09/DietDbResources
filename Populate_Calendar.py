@@ -2,6 +2,8 @@ import pyodbc
 import datetime
 import math
 import pandas
+from WidgetUtility import DateInfo
+from datetime import timedelta
 
 #adds 31 days to date table
 
@@ -11,11 +13,13 @@ cursor = conx.cursor()
 
 #Create date range to insert
 sqlStatements = []
-dateseed = datetime.date.today()
-nextkey = cursor.execute("SELECT DateKey FROM Dates ORDER BY DateKey DESC").fetchone()[0]+1
+lastkey = cursor.execute("SELECT DateKey FROM Dates ORDER BY DateKey DESC").fetchone()[0]
+lastday = DateInfo.initFromDateID(lastkey)
+dateseed = lastday.data[0][1] + timedelta(days = 1)
+nextkey = lastkey
 
 for d in range(0,31):
-	nextkey = nextkey + d
+	nextkey = nextkey + 1
 	dt = dateseed + datetime.timedelta(days=d)
 	date = dt.strftime("%x")
 	daysuffix = dt.strftime("%a")[0:2]
