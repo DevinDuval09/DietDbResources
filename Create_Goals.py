@@ -46,10 +46,10 @@ class GoalsForm():
 		#ACTM general numbers: 1.2 for sedentary, 1.375 for light exercise 3x week, 1.55 for moderate exercise 
 		#3-5x weeik, 1.725 for hard exercise 6-7x week, 1.9 for hard exercise + physical job 7x week)
 
-		#on start, calculate and populate goals
+		#on start, calculate goals
 
 		#Entry for date / data view
-		cal = tkcalendar.Calendar(frame,font="Arial 14", selectmode='day')
+		cal = tkcalendar.Calendar(frame,font="Arial 14", selectmode='day',state='disabled')
 		cal.grid(column = 0, row = 0,columnspan = 4,rowspan=8)
 		#Display user data on top of form
 		lFirstName = ttk.Label(frame,text= 'First Name: \n{}'.format(user.FirstName)).grid(column=4,row=0,rowspan = 2)
@@ -67,36 +67,47 @@ class GoalsForm():
 
 		lHeight = ttk.Label(frame,text = "Height: \n {}'".format(str(int(user.Height/12)))+'{}"'.format(str(user.Height%12))).grid(column = 8, row = 0, rowspan=2)
 
-		targets = Util.Targets(int(user.ID),10,6)
-		targets.displayTargets(frame)
+		lAge = ttk.Label(frame,text = 'Age: \n' + str(user.Age(cal.selection_get()))).grid(column=9,row=0,rowspan=2)
 
-		#lAge = ttk.Label(frame,text = 'Age: \n' + str(user.Age(cal.get_date()))).grid(column=9,row=0,rowspan=2)
-		user.Age(cal.get_date())
+		datestuff = Util.DateInfo.initFromString(cal.get_date())
 
-		datestuff = Util.DateInfo.initFromDate(cal.get_date())
-
-		targets = Util.Targets(user.ID,datestuff.data[0][0])
-
-		cmbGoal = SQLBox(frame,"SELECT * FROM Goaltypes")
+		cmbGoal = SQLBox(frame,"SELECT * FROM Goaltypes",defaultindex=(user.Goal-1))
 		cmbGoal.grid(column = 0)
 
 
-		lCalReq = tkinter.Label(frame,text= 'Average Daily Requirements: {}'.format(''))
+		lCalReq = tkinter.Label(frame,text= 'Average Daily Requirements: {}'.format(round(user.CalcCalories(),2)))
 		lCalReq.grid(column=0)
 
-		def UpdateReq(Goal,multiply,lbl):
-			daily = round(CalcCalories(Goal,multiply),0)
-			lbl.config(text = 'Average Daily Requirements: {}'.format(str(daily)))
+		#display calorie cycle for upcoming 7 days
+		user.calcTargets()
+		dates = []
+		dates.append(DateInfo.initFromDate(cal.selection_get()))
+		for x in range(1,len(user._scheduledCalories)):
+			dates.append(DateInfo.initFromDateID(dates[0].data[0][0] + x))
+		datestring=[(str(d.data[0][4]) + ' ' + str(d.data[0][12]) + ' ' + str(d.data[0][7]) + ' ' + str(d.data[0][17])) for d in dates]
+		caloriestring = [str(round(r,2)) for r in user._scheduledCalories]
 
-		bCalc = ttk.Button(frame,text="Calculate Calorie Requirements",command=lambda:UpdateReq(cmbGoal.get().split(",")[0][1:],float(eMultiplier.get()),lCalReq))
+		display = DataDisplay(frame,datestring,caloriestring)
+		display.grid(column=0)
+
+		def calcDisplay():
+			#use current info displayed to update user object and display everything
+			user.Weight = float(eWeight.get())
+			user.Activity = round(float(eMultiplier.get()),2)
+			user.Goal =  int(cmbGoal.get().split(",")[0][1:])
+			user.calcTargets()
+			new_caloriestring = [str(round(r,2)) for r in user._scheduledCalories]
+			display.UpdateData(datestring,new_caloriestring)
+			lCalReq.config(text= 'Average Daily Requirements: {}'.format(round(user.CalcCalories(),2)))
+
+		bCalc = ttk.Button(frame,text="Calculate Calorie Requirements",command=calcDisplay)
 		bCalc.grid(column=0)
+		def submit():
+			calcDisplay()
+			user.submitTargets()
+		bSubmit = ttk.Button(frame,text="Submit",command=submit)
+		bSubmit.grid(column=1)
 
-		#Calculate the 7 day calorie cycle
-		#display the cycle using the DataDisplay class from Utils
-
-		#lAge = ttk.Label(frame,text = "Age: \n {}".format(date(cal.get()).year - date(userdata)[3].year))
-		#display selected date
-		#input user weight, height, calc age and goals (maintenance, weight gain, weight loss)
 
 
 

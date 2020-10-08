@@ -121,10 +121,12 @@ def InsertStatement(table,columns,values,datatypes):
 	conx.commit()
 
 class SQL_ComboBox(ttk.Combobox):
-	def __init__(self,parent,sql,*args,**kwargs):
+	def __init__(self,parent,sql,defaultindex=None):
 		cursor.execute(sql)
 		droplist = cursor.fetchall()
 		ttk.Combobox.__init__(self,parent,values=droplist)
+		if defaultindex is not None:
+			self.current(defaultindex)
 
 class NextKey_Label(ttk.Label):
 	def __init__(self,parent,table,*args,**kwargs):
@@ -162,6 +164,29 @@ class DataDisplay(tkinter.Frame):
 	#puts some data into a series of rows or columns using tkinter labels and a tkinter frame. First submission should be labels
 	def __init__(self,parent,*datalists,orientation='vertical'):
 		tkinter.Frame.__init__(self,parent)
+		iterable = None
+		if orientation=='vertical':
+			iterable = 'row'
+		else:
+			iterable='column'
+
+		for t in range(0,len(datalists)):
+			data=datalists[t]
+			for i in range(0,len(data)):
+				datapoint = data[i]
+				if (type(data[i]) is int) or (type(data[i]) is float) or (type(data[i]) is complex):
+					datapoint = round(datapoint,2)
+
+				if iterable == 'row':
+					lbl=tkinter.Label(self,text=str(datapoint))
+					lbl.grid(row=i,column=t)
+				else:
+					lbl=tkinter.Label(self,text=str(datapoint))
+					lbl.grid(row=t,column=i)
+	def UpdateData(self,*datalists,orientation='vertical'):
+		for w in self.winfo_children():
+			w.destroy()
+
 		iterable = None
 		if orientation=='vertical':
 			iterable = 'row'
@@ -236,7 +261,7 @@ class Targets():
 			conx.commit()
 			date = date + 1
 	def displayTargets(self,root):
-		targetsql = ("SELECT Dates.WeekDayName,Dates.DOWInMonth,Dates.MonthName,Dates.Year FROM Dates WHERE DateKey BETWEEN {} AND {}".format(self.startdate,self.startdate+self.days))
+		targetsql = ("SELECT Dates.WeekDayName,Dates.DOWInMonth,Dates.MonthName,Dates.Year FROM Dates WHERE DateKey BETWEEN {} AND {}".format(self.startdate,str(self.startdate+self.days)))
 		dateData = cursor.execute(targetsql).fetchall()
 		days = []
 		calories = []
@@ -265,7 +290,7 @@ class DateInfo():
 		return cls(sqlStatements)
 
 	@classmethod
-	def initFromDate(cls,*datestring) -> 'DateInfo':
+	def initFromString(cls,*datestring) -> 'DateInfo':
 		from datetime import date
 		sqlStatements = []
 		for d in datestring:
@@ -275,8 +300,16 @@ class DateInfo():
 			day = int(dt[1])
 			sqlStatements.append("SELECT * FROM Dates WHERE Date = CONVERT(Date,'{}',111)".format(date(year,month,day)))
 		return cls(sqlStatements)
+	@classmethod
+	def initFromDate(cls,*dates)->'DateInfo':
+		import datetime
+		sqlStatements = []
+		for d in dates:
+			sqlStatements.append("SELECT * FROM Dates WHERE Date = CONVERT(Date,'{}',111)".format(d.strftime('%Y/%m/%d')))
+		return cls(sqlStatements)
 
 class User():
+	import datetime
 	def __init__(self,ID):
 		data = cursor.execute("SELECT * FROM Users WHERE UserID = {}".format(ID)).fetchall()[0]
 		self._ID = ID
@@ -291,18 +324,17 @@ class User():
 		self._Activity = newdata[3]
 		self._Goal = newdata[4]
 
-	def Age(self,date):
+	def Age(self,date=datetime.date.today()):
 		#function to calcuate age
 		from datetime import date as dt
 		from datetime import datetime
-		dt = datetime.strptime(date,'%m/%d/%y')
 		
-		if dt.month >= self._Birthday.month and dt.day >= self._Birthday.day:
-			return (int(dt.year - self._Birthday.year)+1)
+		if date.month >= self._Birthday.month and date.day >= self._Birthday.day:
+			return (int(date.year - self._Birthday.year)+1)
 		else:
-			return (int(dt.year - self._Birthday.year))
+			return (int(date.year - self._Birthday.year))
 
-	def CalcBMR(self,date):
+	def CalcBMR(self,date=datetime.date.today()):
 		inchCmConversion = 2.54
 		lbsKGConversion = (1/2.205)
 		if self._Gender == 'm':
@@ -312,7 +344,7 @@ class User():
 
 	def CalcCalories(self):
 			#weight changes assume safe gain/loss based on 1 lbs week, = 3500 calorie surplus/deficit per week
-		base = CalcBMR() * self._Activity
+		base = float(self.CalcBMR()) * float(self._Activity)
 		if int(self._Goal) == 1:
 			return base + 500
 		elif int(self._Goal) == 2:
@@ -321,6 +353,90 @@ class User():
 			return base
 		else:
 			print(self._Goal)
+
+	def calcTargets(self,startdate=datetime.date.today(),days=6,reset=False):
+		#add: check for targets. If don't exist, make, if exist, get
+		dateinfo = DateInfo.initFromDate(startdate)
+		sqlCheckDates = "SELECT * FROM Goals WHERE UserID = {}".format(self._ID)
+		goals = [r for r in cursor.execute(sqlCheckDates).fetchall()]
+		keys = [r[0] for r in goals]
+
+		self._updatekeys = []
+		self._insertkeys = []
+		self._datekeys = []
+
+		for k in keys:
+			for x in range(dateinfo.data[0][0],int(dateinfo.data[0][0])+days):
+				self._datekeys.append(x)
+				if x == k:
+					self._updatekeys.append(k)
+				elif (x > max(keys)) and (x not in self._insertkeys):
+					self._insertkeys.append(x)
+
+		avg = self.CalcCalories()
+
+		sqlCycle = "SELECT TargetType FROM Goals WHERE DateKey Between {} AND {} AND UserID = {} ORDER BY DateKey ASC".format(dateinfo.data[0][0]-1,dateinfo.data[0][0],self._ID)
+		cycle = [r[0] for r in cursor.execute(sqlCycle).fetchall()]
+		
+		cycleKeys = [1,2,3,1,4,5,1]
+		self._goalcycle = []
+		self._scheduledCalories = []
+
+		#set the upcoming cycle is not reset
+		if reset == False:
+			if cycle == [5,1]:
+				self._goalcycle.append(cycleKeys[6])
+			elif cycle == [1,1]:
+				pass
+			elif cycle == [1,2]:
+				self._goalcycle = cycleKeys[1:]
+			elif cycle == [2,3]:
+				self._goalcycle = cycleKeys[2:]
+			elif cycle == [3,1]:
+				self._goalcycle = cycleKeys[3:]
+			elif cycle == [1,4]:
+				self._goalcycle =cycleKeys[4:]
+			elif cycle == [4,5]:
+				self._goalcycle = cycleKeys[5:]
+			else:
+				print('error in goal cycle if statement')
+				print(cycle)
+				print(self._goalcycle)
+
+		while len(self._goalcycle)<days:
+			self._goalcycle = self._goalcycle+cycleKeys
+
+		for day in self._goalcycle:
+			if day == 1:
+				self._scheduledCalories.append(avg)
+			elif day ==2:
+				self._scheduledCalories.append(avg-400)
+			elif day ==3:
+				self._scheduledCalories.append(avg+400)
+			elif day ==4:
+				self._scheduledCalories.append(avg-200)
+			elif day ==5:
+				self._scheduledCalories.append(avg+200)
+
+	def submitTargets(self):
+		#update display in DB
+		print("len datkeys: " + str(len(self._datekeys)))
+		for i in range(0,len(self._datekeys)-1):
+			if self._datekeys[i] in self._updatekeys:
+				cursor.execute(("UPDATE Goals SET TotalCalories = {}, TargetType = {} "
+								"WHERE DateKey = {} AND UserID = {}".
+								format(self._scheduledCalories[i],self._goalcycle[i],self._datekeys[i],self._ID)))
+				print("i: " + str(i))
+				conx.commit()
+			elif self._datekeys[i] in self._insertkeys:
+				cursor.execute(("INSERT INTO Goals VALUES({},{},{},{},{})"
+								.format(self._datekeys[i],self._scheduledCalories[i],200,self._goalcycle[i],self._ID)))
+				conx.commit()
+			else:
+				print('Error')
+		datekey = DateInfo.initFromDate(datetime.date.today()[0])
+		cursor.execute(("INSERT INTO UserWeight VALUES({},{},{},{},{})"
+					.format(self._ID,datekey[0],self._Weight,self._Activity,self._Goal)))
 
 	@property
 	def ID(self):
