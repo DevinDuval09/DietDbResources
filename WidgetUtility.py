@@ -367,13 +367,14 @@ class User():
 
 		for k in keys:
 			for x in range(dateinfo.data[0][0],int(dateinfo.data[0][0])+days):
-				self._datekeys.append(x)
+				if x not in self._datekeys:
+					self._datekeys.append(x)
 				if x == k:
 					self._updatekeys.append(k)
 				elif (x > max(keys)) and (x not in self._insertkeys):
 					self._insertkeys.append(x)
 
-		avg = self.CalcCalories()
+		avg = round(self.CalcCalories(),2)
 
 		sqlCycle = "SELECT TargetType FROM Goals WHERE DateKey Between {} AND {} AND UserID = {} ORDER BY DateKey ASC".format(dateinfo.data[0][0]-1,dateinfo.data[0][0],self._ID)
 		cycle = [r[0] for r in cursor.execute(sqlCycle).fetchall()]
@@ -382,12 +383,15 @@ class User():
 		self._goalcycle = []
 		self._scheduledCalories = []
 
-		#set the upcoming cycle is not reset
+		#print(goals)
+		#print(cycle)
+
+		#set the upcoming cycle is not reset #not working
 		if reset == False:
 			if cycle == [5,1]:
-				self._goalcycle.append(cycleKeys[6])
+				self._goalcycle = cycleKeys[6:]
 			elif cycle == [1,1]:
-				pass
+				self._goalcycle = cycleKeys[0:]
 			elif cycle == [1,2]:
 				self._goalcycle = cycleKeys[1:]
 			elif cycle == [2,3]:
@@ -406,6 +410,8 @@ class User():
 		while len(self._goalcycle)<days:
 			self._goalcycle = self._goalcycle+cycleKeys
 
+		#print(self._goalcycle)
+
 		for day in self._goalcycle:
 			if day == 1:
 				self._scheduledCalories.append(avg)
@@ -418,15 +424,21 @@ class User():
 			elif day ==5:
 				self._scheduledCalories.append(avg+200)
 
+		#print(self._goalcycle)
+		#print(self._scheduledCalories)
+		#print(self._updatekeys)
+		#print(self._insertkeys)
+		#print(self._datekeys)
+
 	def submitTargets(self):
 		#update display in DB
-		print("len datkeys: " + str(len(self._datekeys)))
+		import datetime
 		for i in range(0,len(self._datekeys)-1):
 			if self._datekeys[i] in self._updatekeys:
 				cursor.execute(("UPDATE Goals SET TotalCalories = {}, TargetType = {} "
 								"WHERE DateKey = {} AND UserID = {}".
 								format(self._scheduledCalories[i],self._goalcycle[i],self._datekeys[i],self._ID)))
-				print("i: " + str(i))
+				#print("i: " + str(i))
 				conx.commit()
 			elif self._datekeys[i] in self._insertkeys:
 				cursor.execute(("INSERT INTO Goals VALUES({},{},{},{},{})"
@@ -434,9 +446,9 @@ class User():
 				conx.commit()
 			else:
 				print('Error')
-		datekey = DateInfo.initFromDate(datetime.date.today()[0])
-		cursor.execute(("INSERT INTO UserWeight VALUES({},{},{},{},{})"
-					.format(self._ID,datekey[0],self._Weight,self._Activity,self._Goal)))
+		datekey = DateInfo.initFromDate(datetime.date.today()).data[0][0]
+		cursor.execute("INSERT INTO UsersWeight(UserID, Date, Pounds, ActivityMultiplier, GoalType) VALUES({}, {}, {}, {}, {})".format(self._ID,datekey,round(self._Weight,1),round(self._Activity,2),self._Goal))
+		conx.commit()
 
 	@property
 	def ID(self):
