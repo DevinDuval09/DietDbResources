@@ -38,13 +38,7 @@ bSubmit = ttk.Button(frame,text='Select',command=Submit).grid(column=0)
 
 class GoalsForm():
 	def __init__(self,user,frame):
-		#use Mifflin St.Jeor calculation
-		#Base Metobalic Rate(men) = (10 x weight(kg)) + (6.25 x height(cm)) - (5 x age) + 5
-		#BMR(women) = (10 x weight(kg)) + (6.25 x heigh(cm)) - (5 x age) - 161
-		#Calories Needed = BMR x activity multiplier
-		#Activity multiplier is estimate and will be different for different people
-		#ACTM general numbers: 1.2 for sedentary, 1.375 for light exercise 3x week, 1.55 for moderate exercise 
-		#3-5x weeik, 1.725 for hard exercise 6-7x week, 1.9 for hard exercise + physical job 7x week)
+
 
 		#on start, calculate goals
 
@@ -106,7 +100,7 @@ class GoalsForm():
 			calcDisplay()
 			user.submitTargets()
 		bSubmit = ttk.Button(frame,text="Submit",command=submit)
-		bSubmit.grid(column=1)
+		bSubmit.grid(column=1,row=bCalc.grid_info()['row'])
 
 
 
