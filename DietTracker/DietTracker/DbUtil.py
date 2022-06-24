@@ -58,6 +58,7 @@ def get_connection():
                 password = file.readline().strip()
         except FileNotFoundError:
             print("Cannot locate passwords.txt")
+            return
     try:
         connection = psycopg2.connect(user=admin,
                                       password=password,
@@ -98,6 +99,7 @@ def create_postgresql_engine(db=database, driver=gosling, user=admin, pword=pass
                 pword = file.readline().strip()
         except FileNotFoundError:
             print("Cannot locate passwords.txt")
+            return
     return create_engine(f"postresql+{driver}://{user}:{pword}@{host}/{db}")
 
 def create_CalorieTracker_Db(engine):
