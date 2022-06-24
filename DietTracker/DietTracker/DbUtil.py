@@ -9,7 +9,7 @@ from sqlalchemy.engine import Engine, Connection
 
 database = "CalorieTracker"
 admin = 'postgres'
-password = '?'
+password = None
 host='127.0.0.1'
 port=6000
 gosling = 'psycopg2'
@@ -52,6 +52,12 @@ food_eaten =    Table("food_eaten", meta,
                     )
 
 def get_connection():
+    if password is None:
+        try:
+            with open("passwords.txt", "r") as file:
+                password = file.readline().strip()
+        except FileNotFoundError:
+            print("Cannot locate passwords.txt")
     try:
         connection = psycopg2.connect(user=admin,
                                       password=password,
@@ -86,6 +92,12 @@ def create_test_engine(log_to_console=True):
     return create_engine("sqlite://", echo=log_to_console, future=True)
 
 def create_postgresql_engine(db=database, driver=gosling, user=admin, pword=password, host=host, port=port):
+    if pword is None:
+        try:
+            with open("passwords.txt", "r") as file:
+                pword = file.readline().strip()
+        except FileNotFoundError:
+            print("Cannot locate passwords.txt")
     return create_engine(f"postresql+{driver}://{user}:{pword}@{host}/{db}")
 
 def create_CalorieTracker_Db(engine):
