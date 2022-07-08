@@ -1,0 +1,61 @@
+
+{% extends "base.html" %}
+{% block content %}
+    <h1>Food Info</h1>
+        {% if message %}
+        <p size=35>{{ message }}</p>
+        {% endif %}
+        <div class="food_info">
+            <table>
+                <tr>
+                    <th>Food</th>
+                    <th>Calories per Unit</th>
+                    <th>Units</th>
+                </tr>
+            {% for row in rows %}
+                <tr>
+                    <td>{{row.0}}</td>
+                    <td>{{row.1}}</td>
+                    <td>{{row.2}}</td>
+                </tr>
+            {% endfor %}
+            </table>
+        </div>
+{% endblock %}
+{% block inputbox %}
+<form id="add_food" method="post">
+    {% csrf_token %}
+    <p><label for="food_input">Enter the food description:</label>
+    <input name="food_input" type = "text" size=35></p>
+    <p><label for="measurement_input">Select a measurement:</label>
+    <select name="measurement_input" name="measurement_input">
+        {% for m_row in m_table %}
+        <option value="{{ m_row.0 }}">{{m_row.1}}</option>
+        {% endfor %}
+    </select>
+    </p>
+    <p><label for="calorie_input">Enter the calories per measurement:</label>
+    <input name="calorie_input" type = "number" size=35 step=".001" value=0></p>
+    <p><label for="protein_input">Enter the protein per measurement:</label>
+    <input name="protein_input" type = "number" size=35 step=".001" value=0></p>
+    <p><label for="carbs_input">Enter the carbs per measurement:</label>
+    <input name="carbs_input" type = "number" size=35 step=".001" value=0></p>
+    <p><label for="total_fat_input">Enter the total_fat per measurement:</label>
+    <input name="total_fat_input" type = "number" size=35 step=".001" value=0></p>
+    <p><label for="sat_fat_input">Enter the sat_fat per measurement:</label>
+    <input name="sat_fat_input" type = "number" size=35 step=".001" value=0></p>
+    <p><label for="fiber_input">Enter the fiber per measurement:</label>
+    <input name="fiber_input" type = "number" size=35 step=".001" value=0></p>
+<button type="submit" class="btn btn-default"&gt;>Submit</button> 
+</form>
+{% if errors %}
+<div id="errors">
+    <label name="error_label">FOOD FAILED TO LOAD</label>
+    <ol name="error_list">
+        {% for error in errors %}
+        <li>{{error}}</li>
+        {% endfor %}
+    </ol>
+</div>
+{% endif %}
+{% endblock %}

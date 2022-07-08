@@ -1,3 +1,5 @@
-DietTracker/DietTracker/__pycache__/
+DietTracker/__pycache__/
 DietTrackerEnv/
 passwords.txt
+*.sqlite3
+*/__pycache__/
