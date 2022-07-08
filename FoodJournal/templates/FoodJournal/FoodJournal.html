@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>My Food Journal</h1>
+        <div class="food_entry">
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Food</th>
+                    <th>Quantity</th>
+                    <th>Total Calories</th>
+                </tr>
+            {% for row in rows %}
+                <tr>
+                    <td>{{row.0}}</td>
+                    <td>{{row.1}}</td>
+                    <td>{{row.2}}</td>
+                    <td>{{row.3}}</td>
+                </tr>
+            {% endfor %}
+            </table>
+        </div>
+{% endblock %}
+{% block inputbox %}
+<form id="add_food" method="post">
+    {% csrf_token %}
+    <p><label for="date_input">Enter the date:</label>
+    <input name="date_input" type = "date" size = 35></p>
+    <p><label for="food_input">Enter the food eaten:</label>
+    <input name="food_input" type = "text" size=35></p>
+    <p><label for="qty_input">Enter the quantity eaten:</label>
+    <input name="qty_input" type = "numeric" size=35></p>
+    <p><label for="total_cals">Total Calories:</label>
+    <label name="total_cals" id="total_cals" size=35></p>
+    <p><button type="submit" class="btn btn-default"&gt;>Submit</button></p> 
+</form>
+{% load static %}
+<script src="{% static 'js/total_calories.js' %}"></script>
+{% endblock %}
