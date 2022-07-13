@@ -4,6 +4,7 @@ calorie_label = document.getElementById("total_cals");
 calories_unit_label = document.getElementById("unit_cals");
 qty_input = document.getElementsByName("qty_input")[0];
 food_input = document.getElementsByName("food_input")[0];
+food_id = document.getElementsByName("food_id")[0];
 csrf_token = document.getElementsByName("csrfmiddlewaretoken")[0].value
 
 function display_calories(){
@@ -20,6 +21,7 @@ function display_calories(){
                 data = JSON.parse(food_request.responseText);
                 qty = Number(qty_input.value);
                 total_calories = qty * data["calories_unit"]
+                food_id.value = data["id"]
                 console.log("total calories:")
                 console.log(total_calories)
                 calorie_label.innerHTML = String(total_calories)
