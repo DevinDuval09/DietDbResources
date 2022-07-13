@@ -8,6 +8,9 @@ from sqlalchemy import select, insert
 from sqlalchemy.exc import IntegrityError
 import os
 from .forms import InputFoodEaten, NewUserForm
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_user(request, *args, **kwargs):
     form = NewUserForm(request.POST)
@@ -51,7 +54,6 @@ def test_page(request, *args, **kwargs):
 def generate_food_journal(request, username, template_name="FoodJournal/FoodJournal.html", *args, **kwargs):
     if request.user.id is None:
         return redirect("/login/")
-    form = InputFoodEaten(initial={"user": request.user.id})
     if request.method == "GET":
         template_name = "FoodJournal/FoodJournal.html"
         kwargs["user_id"] = get_id(users, users.c.username, username)
@@ -67,8 +69,10 @@ def generate_food_journal(request, username, template_name="FoodJournal/FoodJour
                 data.append([row[0], row[1], row[2], row[2] * row[3]])
         return render(request, template_name, {"rows": data})
     elif request.method == "POST":
+        form = InputFoodEaten(request.POST, initial={"user": request.user.id})
+        logger.info("\n\nInvoking form\n\n")
         if form.is_valid():
-            form.save()
+            form.save(request)
         return redirect(reverse("user_index", args=[username]))
 
 def food_journal_form(request, *args, **kwargs):
