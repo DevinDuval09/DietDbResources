@@ -2,7 +2,7 @@ from django.db.models.base import Model
 from django.forms import Form, ModelForm, TextInput, Textarea, DateInput, NumberInput, ChoiceField, Select
 from django.contrib.auth.forms import UserCreationForm
 from .DbUtil import FOOD_CHOICES, session, food_eaten
-from sqlalchemy import select
+from sqlalchemy import select, insert
 
 class NewUserForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
@@ -20,8 +20,9 @@ class InputFoodEaten(Form):
             "calories"  : NumberInput({"readonly":True})
         }
         labels = {"date": "Date:", "food": "Food:", "qty": "Quantity:", "calories": "Total Calories:"}
-    def save(self):
+    def save(self, request):
         if self.is_valid():
+            print(data)
             data = {}
             data["date"] = request.POST["date"]
             data["food"] = request.POST["food"]
