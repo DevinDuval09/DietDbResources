@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+DATABASE_NAME = 'db.sqlite3'
 
 
 database = "CalorieTracker"
@@ -107,8 +108,8 @@ def list_tables():
             for table in cursor:
                 print(table)
 
-def create_test_engine(log_to_console=True):
-    return create_engine(f"sqlite:///{BASE_DIR / 'db.sqlite3'}", echo=log_to_console, future=True)
+def create_test_engine(db_name=DATABASE_NAME, log_to_console=True):
+    return create_engine(f"sqlite:///{BASE_DIR / db_name}", echo=log_to_console, future=True)
 
 csv_file = os.path.dirname(__file__) + '\csv\RawFoodData.csv'
 engine = create_test_engine(log_to_console=False)
@@ -190,8 +191,7 @@ def create_database(engine:Engine):
         except OperationalError:
             try:
                 tbl = Table(tbl.name, meta, autoload_with=engine)
-                print(f"{tbl} was changed to reflect existing table.")
-                #/print(tbl)
+                #print(f"{tbl} was changed to reflect existing table.")
             except OperationalError:
                 continue
 
