@@ -1,16 +1,20 @@
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.contrib.auth import login
 from .DbUtil import *
 from sqlalchemy import select, insert
 from sqlalchemy.exc import IntegrityError
 import os
 from .forms import InputFoodEaten, NewUserForm
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_user(request, *args, **kwargs):
     form = NewUserForm(request.POST)
-    redirect_page = request.POST.get("food_index", "/")
+    redirect_page = request.POST.get("user_index", "/")
     if form.is_valid():
         user = form.save(commit=False)
         user.save()
@@ -20,21 +24,14 @@ def create_user(request, *args, **kwargs):
         return render(request, "new_user.html", {"form": form})
 
 def add_meal(request, *args, **kwargs):
-    form = InputFoodEaten(request.POST)
-    user_name = request.user_name
     if request.user.id is None:
         return redirect("/login/")
-    if form.is_valid():
-        form.save()
-    redirect(f"/FoodJournal/{user_name}")
-
-
-
-def edit_food_eaten(request, *args, **kwargs):
-    pass
-
-def view_food_eaten(request, *args, **kwargs):
-    pass
+    form = InputFoodEaten(initial={"user": request.user.id})
+    user_name = request.user_name
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+    redirect(f"/FoodJournal/{user_name}/")
 
 def test_page(request, *args, **kwargs):
     body = "Test Page\n\n"
@@ -46,23 +43,28 @@ def test_page(request, *args, **kwargs):
         body += "\n".join([f"\t{tup}" for tup in kwargs.items()])
     return HttpResponse(body, content_type="text/plain")
 
-def generate_food_journal(request, template_name="FoodJournal/FoodJournal.html", *args, **kwargs):
-    template_name = "FoodJournal/FoodJournal.html"
-    kwargs["user_id"] = get_id(users, users.c.username, kwargs["username"])
-    with session.begin() as s:
-        query = select(food_eaten.c.date,
-                        food_info.c.description,
-                        food_eaten.c.qty,
-                        food_info.c.calories_unit)\
-                    .filter(food_eaten.c.food == food_info.c.id, food_eaten.c.user == kwargs["user_id"])
-        results = s.execute(query).all()
-        data = []
-        for row in results:
-            data.append([row[0], row[1], row[2], row[2] * row[3]])
-    return render(request, template_name, {"rows": data})
-
-def food_journal_form(request, *args, **kwargs):
-    form = InputFoodEaten(request.POST)
+def generate_food_journal(request, username, template_name="FoodJournal/FoodJournal.html", *args, **kwargs):
+    if request.user.id is None:
+        return redirect("/login/")
+    if request.method == "GET":
+        template_name = "FoodJournal/FoodJournal.html"
+        kwargs["user_id"] = get_id(users, users.c.username, username)
+        with session.begin() as s:
+            query = select(food_eaten.c.date,
+                            food_info.c.description,
+                            food_eaten.c.qty,
+                            food_info.c.calories_unit)\
+                        .filter(food_eaten.c.food == food_info.c.id, food_eaten.c.user == kwargs["user_id"])
+            results = s.execute(query).all()
+            data = []
+            for row in results:
+                data.append([row[0], row[1], row[2], row[2] * row[3]])
+        return render(request, template_name, {"rows": data})
+    elif request.method == "POST":
+        form = InputFoodEaten(request.POST, initial={"user": request.user.id})
+        if form.is_valid():
+            form.save(request)
+        return redirect(reverse("user_index", args=[username]))
 
 def get_food_info_page(request, template_name="FoodJournal/FoodInfo.html", *args, **kwargs):
     with session.begin() as s:
