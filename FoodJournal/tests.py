@@ -1,7 +1,10 @@
 from .DbUtil import *
-from .views import get_food_json
+from .views import get_food_json, create_user
 from django.test import TestCase, TransactionTestCase, LiveServerTestCase
 from django.http.request import HttpRequest
+from django.contrib.auth.models import User
+from importlib import import_module
+from django.conf import settings
 from sqlalchemy import Date, Table, Column, MetaData, Integer, Identity, Text, Numeric, ForeignKey
 from sqlalchemy import create_engine, select
 from sqlalchemy.engine import Engine
@@ -9,11 +12,14 @@ from sqlalchemy.exc import IntegrityError as bad_brew
 import os
 import sqlite3
 import json
+from datetime import date
 
 class DatabaseTests(TestCase):
+    fixtures = ["users_fixtures.json"]
     def setUp(self):
+        self.user = User.objects.get(pk=1)
         self.csv_file = os.path.dirname(__file__) + '\csv\RawFoodData.csv'
-        self.engine = create_engine("sqlite:///file:test_db?mode=memory&cache=shared&uri=true", future=True)
+        self.engine = create_test_engine(db_name="test_db.sqlite3", log_to_console=False)
         create_database(self.engine)
         try:
             load_foodinfo_csv(self.csv_file, self.engine)
@@ -26,14 +32,24 @@ class DatabaseTests(TestCase):
     def test_setup(self):
         food_count = 0
         measurement_count = 0
+        user_count = 0
         with self.engine.connect() as conn:
             results = conn.execute(food_info.select())
+            #print("\n\n")
+            #print(food_info.bind)
             for _ in results:
                 food_count += 1
         with self.engine.connect() as conn:
             results2 = conn.execute(measurements.select())
             for _ in results2:
                 measurement_count += 1
+        with self.engine.connect() as conn:
+            results = conn.execute(users.select())
+            for _ in results:
+                print(_)
+                user_count += 1
+        #print('\n\n')
+        #print(self.user.id)
         self.assertTrue(food_count > 0)
         self.assertTrue(measurement_count > 0)
 
@@ -75,5 +91,23 @@ class DatabaseTests(TestCase):
         js = get_food_json(request, test)
         data = json.loads(js.getvalue().decode())
         self.assertEquals(test, data["description"])
+
+    def test_generate_food_journal(self):
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        food = {"qty_input": 2, "food_id": 1, "date_input": date.today()}
+        post = self.client.post(f"/FoodJournal/user/", data=food, follow=True)
+        with self.engine.connect() as conn:
+            stmt = food_eaten.select()
+            results = conn.execute(stmt)
+            for row in results:
+                print(row)
+    
+        self.assertEquals(post.status_code, 200)
+
+
 
 
