@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def create_user(request, *args, **kwargs):
     form = NewUserForm(request.POST)
-    redirect_page = request.POST.get("food_index", "/")
+    redirect_page = request.POST.get("user_index", "/")
     if form.is_valid():
         user = form.save(commit=False)
         user.save()
@@ -32,14 +32,6 @@ def add_meal(request, *args, **kwargs):
         if form.is_valid():
             form.save()
     redirect(f"/FoodJournal/{user_name}/")
-
-
-
-def edit_food_eaten(request, *args, **kwargs):
-    pass
-
-def view_food_eaten(request, *args, **kwargs):
-    pass
 
 def test_page(request, *args, **kwargs):
     body = "Test Page\n\n"
@@ -70,13 +62,9 @@ def generate_food_journal(request, username, template_name="FoodJournal/FoodJour
         return render(request, template_name, {"rows": data})
     elif request.method == "POST":
         form = InputFoodEaten(request.POST, initial={"user": request.user.id})
-        logger.info("\n\nInvoking form\n\n")
         if form.is_valid():
             form.save(request)
         return redirect(reverse("user_index", args=[username]))
-
-def food_journal_form(request, *args, **kwargs):
-    form = InputFoodEaten(request.POST)
 
 def get_food_info_page(request, template_name="FoodJournal/FoodInfo.html", *args, **kwargs):
     with session.begin() as s:
