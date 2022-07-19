@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, select, join
 from sqlalchemy.engine import Engine, Connection
 from sqlalchemy.orm import registry
 from sqlalchemy.orm.session import sessionmaker, Session
-from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.exc import IntegrityError, OperationalError, NoReferencedTableError
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,7 +34,7 @@ fiber = 6
 measurement = 7
 
 meta = MetaData()
-food_info =     Table("food_info", meta,
+food_info =     Table("Foods", meta,
                     Column("id", Integer, Identity(always=True, start=1, cycle=True), primary_key=True, nullable=False),
                     Column("description", Text, nullable=False, unique=True),
                     Column("calories_unit", Numeric, nullable=False),
@@ -43,9 +43,9 @@ food_info =     Table("food_info", meta,
                     Column("total_fat_unit", Numeric, nullable=False),
                     Column("sat_fat_unit", Numeric, nullable=False),
                     Column("fiber_unit", Numeric, nullable=False),
-                    Column("measurement_unit", Integer, ForeignKey("measurements.id"), nullable=False)
+                    Column("measurement_unit", Integer, ForeignKey("Measurements.id"), nullable=False)
                     )
-measurements =  Table("measurements", meta,
+measurements =  Table("Measurements", meta,
                     Column("id", Integer, Identity(always=True, start=1, cycle=True), primary_key=True, nullable=False),
                     Column("description", Text, nullable=False, unique=True),
                     )
@@ -62,9 +62,9 @@ users  =         Table("auth_user", meta,
                     Column("last_login", Date, nullable=True),
                     Column("date_joined", Date, nullable=False)
                     )
-food_eaten =    Table("food_eaten", meta,
+food_eaten =    Table("Meals", meta,
                     Column("id", Integer, Identity(always=True, start=1, cycle=True), primary_key=True, nullable=False),
-                    Column("food", Integer, ForeignKey("food_info.id"), nullable=False),
+                    Column("food", Integer, ForeignKey("Foods.id"), nullable=False),
                     Column("qty", Numeric, nullable=False),
                     Column("date", Date, nullable=False),
                     Column("user", Integer, ForeignKey("auth_user.id"), nullable=False)
@@ -195,17 +195,6 @@ def create_database(engine:Engine):
             except OperationalError:
                 continue
 
-FOOD_CHOICES = []
-try:
-    session = sessionmaker(bind=engine)
-    with session.begin() as s:
-        stmt = select(food_info.c.id, food_info.c.description)
-        results = s.execute(stmt)
-        for row in results:
-            FOOD_CHOICES.append((row[1], row[0]))
-except (IntegrityError, OperationalError):
-    print("Failed to create FOOD_CHOICES")
-
 def clear_db(engine:Engine):
     for tbl in reversed(meta.sorted_tables):
         try:
@@ -215,6 +204,8 @@ def clear_db(engine:Engine):
             tbl.drop(engine)
         except OperationalError:
             continue
+        except NoReferencedTableError:
+            continue
 
 def reset_db(engine:Engine=engine, load_csv=True):
     clear_db(engine)
@@ -223,7 +214,7 @@ def reset_db(engine:Engine=engine, load_csv=True):
         load_foodinfo_csv(csv_file)
 
 def clean_input(user_input:str)->str:
-    return user_input.replace(";", "").replace("(", "").replace(")", "")
+    return user_input.replace(";", "").replace("(", "").replace(")", "").replace("%20", " ")
 
 def get_food_dict(food:str, engine:Engine=engine)->str:
     view = food_info.join(measurements)
@@ -247,4 +238,7 @@ def get_food_dict(food:str, engine:Engine=engine)->str:
 
 if __name__ == "__main__":
     #deletes current db, creates the database and loads the csv file
+    #users = Table("auth_user", meta, auto_load=engine)
+    #meta.create_all(bind=engine)
     load_foodinfo_csv(csv_file)
+

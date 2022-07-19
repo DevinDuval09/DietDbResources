@@ -1,4 +1,5 @@
 from .DbUtil import *
+from .models import *
 from .views import get_food_json, create_user
 from django.test import TestCase, TransactionTestCase, LiveServerTestCase
 from django.http.request import HttpRequest
@@ -13,47 +14,32 @@ import os
 import sqlite3
 import json
 from datetime import date
+from .models import csv_to_model, Foods, Measurements, Meals
 
 class DatabaseTests(TestCase):
     fixtures = ["users_fixtures.json"]
     def setUp(self):
         self.user = User.objects.get(pk=1)
         self.csv_file = os.path.dirname(__file__) + '\csv\RawFoodData.csv'
-        self.engine = create_test_engine(db_name="test_db.sqlite3", log_to_console=False)
-        create_database(self.engine)
         try:
-            load_foodinfo_csv(self.csv_file, self.engine)
+            csv_to_model(self.csv_file)
         except sqlite3.IntegrityError or bad_brew:
             print("failed to load csv")
 
     def tearDown(self):
-        reset_db(engine=self.engine, load_csv=True)
-
+        pass
     def test_setup(self):
         food_count = 0
         measurement_count = 0
         user_count = 0
-        with self.engine.connect() as conn:
-            results = conn.execute(food_info.select())
-            #print("\n\n")
-            #print(food_info.bind)
-            for _ in results:
-                food_count += 1
-        with self.engine.connect() as conn:
-            results2 = conn.execute(measurements.select())
-            for _ in results2:
-                measurement_count += 1
-        with self.engine.connect() as conn:
-            results = conn.execute(users.select())
-            for _ in results:
-                print(_)
-                user_count += 1
-        #print('\n\n')
-        #print(self.user.id)
+        for _ in Foods.objects.all():
+            food_count += 1
+        for _ in Measurements.objects.all():
+            measurement_count += 1
         self.assertTrue(food_count > 0)
         self.assertTrue(measurement_count > 0)
 
-    def test_get_id(self):
+    '''def test_get_id(self):
         test = "test"
         correct = 0
         s = select(measurements)
@@ -76,21 +62,40 @@ class DatabaseTests(TestCase):
         with self.engine.connect() as conn:
             add_measurement(test, conn)
         id = get_id(measurements, measurements.c.description, test, self.engine)
-        self.assertTrue(id > 0)
+        self.assertTrue(id > 0)'''
 
-    def test_get_food_dict(self):
-        test = "tofu"
-        tofu_dict = get_food_dict(test, self.engine)
-        self.assertEquals(test, tofu_dict['description'])
+    def test_get_food_model(self):
+        test = "pork shoulder"
+        test_dict = get_food_model(test)
+        self.assertEquals(test, test_dict["description"])
 
     def test_get_food_json(self):
-        test = "tofu"
-        request = HttpRequest()
-        request.method = "GET"
-        request.path = "FoodJournal/get_food_json/" + test
-        js = get_food_json(request, test)
-        data = json.loads(js.getvalue().decode())
-        self.assertEquals(test, data["description"])
+        test1 = "tofu"
+        test2 = "90% ground beef"
+        test3 = "pinto beans"
+        tests = [test1, test2, test3]
+        for test in tests:
+            food = Foods.create(test, 1, 1, 1, 1, 1, 1, Measurements.objects.get(id=1))
+            food.save()
+            request = HttpRequest()
+            request.method = "GET"
+            request.path = "FoodJournal/get_food_json/" + test
+            js = get_food_json(request, test)
+            data = json.loads(js.getvalue().decode())
+            self.assertEquals(test, data["description"])
+
+    def test_get_food_json_not_found(self):
+        test1 = "plastic"
+        test2 = "90% not food"
+        test3 = "mercedes benz"
+        tests = [test1, test2, test3]
+        for test in tests:
+            request = HttpRequest()
+            request.method = "GET"
+            request.path = "FoodJournal/get_food_json/" + test
+            js = get_food_json(request, test)
+            data = json.loads(js.getvalue().decode())
+            self.assertTrue(test in data["error"])
 
     def test_generate_food_journal(self):
         curr_user = User.objects.create(username="user")
@@ -100,13 +105,10 @@ class DatabaseTests(TestCase):
         self.assertTrue(login)
         food = {"qty_input": 2, "food_id": 1, "date_input": date.today()}
         post = self.client.post(f"/FoodJournal/user/", data=food, follow=True)
-        with self.engine.connect() as conn:
-            stmt = food_eaten.select()
-            results = conn.execute(stmt)
-            for row in results:
-                print(row)
-    
         self.assertEquals(post.status_code, 200)
+
+    def test_add_food_form(self):
+        pass
 
 
 

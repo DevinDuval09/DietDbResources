@@ -1,51 +1,60 @@
 from django.db.models.base import Model
 from django.forms import Form, ModelForm, TextInput, Textarea, DateInput, NumberInput, ChoiceField, Select
 from django.contrib.auth.forms import UserCreationForm
-from .DbUtil import FOOD_CHOICES, food_eaten, DATABASE_NAME, create_test_engine
-from sqlalchemy.orm.session import sessionmaker, Session
-from sqlalchemy import select, insert
 import logging
 from datetime import datetime
-import os
+from .models import Meals, Foods, Measurements
 
 logger = logging.getLogger(__name__)
-engine = create_test_engine()
+#MEASUREMENT_CHOICES = Measurements.objects.all()
+#FOOD_CHOICES = Foods.objects.all()
 class NewUserForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         fields = UserCreationForm.Meta.fields + ("email",)
         labels = {"email": ("Email address:")}
 
 
-class InputFoodEaten(Form):
+class InputFoodEaten(ModelForm):
     class Meta:
-        fields = ["date", "food", "qty", "calories"]
+        model = Meals
+        fields = ["cdate", "food", "qty", "user"]
         widgets = {
-            "date"      : DateInput(attrs={"class":"datepicker"}),
-            "food"      : ChoiceField(choices = FOOD_CHOICES, required=True),
+            "cdate"      : DateInput(attrs={"class":"datepicker"}),
+            "food"      : NumberInput(attrs={"required":True}),#ChoiceField(choices = FOOD_CHOICES, required=True),
             "qty"       : NumberInput(attrs={"required": True}),
-            "calories"  : NumberInput({"readonly":True})
+            "user"      : NumberInput(attrs={"required": True})
         }
-        labels = {"date": "Date:", "food": "Food:", "qty": "Quantity:", "calories": "Total Calories:"}
-    def save(self, request):
-        if self.is_valid():
-            session = sessionmaker(engine)
-            logger.info("Post request and data transformation:")
-            logger.info(request.POST)
-            data = {}
-            data["date"] = datetime.strptime(request.POST["date_input"], '%Y-%m-%d')
-            data["food"] = request.POST["food_id"]
-            data["qty"] = request.POST["qty_input"]
-            data["user"] = request.user.id
-            logger.info(data)
-            with session.begin() as s:
-                stmt = insert(food_eaten).values(
-                                                date=data["date"],
-                                                food=data["food"],
-                                                qty=data["qty"],
-                                                user=data["user"]
-                                                )
-                s.execute(stmt)
-                s.commit()
-                return
-        logger.error("InputFoodEaten form is not valid.")
+        labels = {"cdate": "Date:", "food": "Food:", "qty": "Quantity:"}
+
+class AddFood(Form):
+    class Meta:
+        model = Foods
+        fields =    ["description",
+                    "calories_unit",
+                    "protein_unit",
+                    "carbs_unit",
+                    "total_fat_unit",
+                    "sat_fat_unit",
+                    "fiber_unit",
+                    "measurement_unit"]
+        widgets = {
+            "description":      TextInput(attrs={"required": True}),
+            "calories_unit":    NumberInput(attrs={"required": True}),
+            "protein_unit":    NumberInput(attrs={"required": True}),
+            "carbs_unit":    NumberInput(attrs={"required": True}),
+            "total_fat_unit":    NumberInput(attrs={"required": True}),
+            "sat_fat_unit":    NumberInput(attrs={"required": True}),
+            "fiber_unit":    NumberInput(attrs={"required": True}),
+            "measurement_unit":    TextInput(attrs={"required": True}),
+        }
+        labels = {
+            "description": "Description",
+            "calories_unit": "Calories",
+            "protein_unit": "Protein",
+            "carbs_unit": "Carbs",
+            "total_fat_unit": "Total Fat",
+            "sat_fat_unit": "Saturated Fat",
+            "fiber_unit": "Fiber",
+            "measurement_unit": "Measurements"
+        }
 
