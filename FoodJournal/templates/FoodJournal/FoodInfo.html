@@ -12,11 +12,11 @@
                     <th>Calories per Unit</th>
                     <th>Units</th>
                 </tr>
-            {% for row in rows %}
+            {% for row in object_list %}
                 <tr>
-                    <td>{{row.0}}</td>
-                    <td>{{row.1}}</td>
-                    <td>{{row.2}}</td>
+                    <td>{{row.description}}</td>
+                    <td>{{row.calories_unit}}</td>
+                    <td>{{row.measurement_unit.description}}</td>
                 </tr>
             {% endfor %}
             </table>
@@ -30,7 +30,7 @@
     <p><label for="measurement_input">Select a measurement:</label>
     <select name="measurement_input" name="measurement_input">
         {% for m_row in m_table %}
-        <option value="{{ m_row.0 }}">{{m_row.1}}</option>
+        <option value="{{ m_row.id }}">{{m_row.description}}</option>
         {% endfor %}
     </select>
     </p>
