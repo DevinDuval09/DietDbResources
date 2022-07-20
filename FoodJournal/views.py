@@ -11,9 +11,17 @@ from sqlalchemy.exc import IntegrityError
 import os
 from .forms import InputFoodEaten, NewUserForm
 import logging
-from datetime import datetime
+from datetime import date, timedelta, datetime
 
 logger = logging.getLogger(__name__)
+
+DATE_FORMAT = "%Y-%m-%d"
+class IsoStringDateConverter:
+    regex = "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
+    def to_python(self, date_string):
+        return datetime.strptime(date_string, DATE_FORMAT)
+    def to_url(self, date_val):
+        return date_val.strftime(DATE_FORMAT)
 
 def create_user(request, *args, **kwargs):
     form = NewUserForm(request.POST)
@@ -28,8 +36,24 @@ def create_user(request, *args, **kwargs):
 
 class MealsView(ListView):
     template_name = "FoodJournal/meals_list.html"
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        logger.info(kwargs)
+        if not self.kwargs.get("startdate") or not self.kwargs.get("enddate"):
+            enddate = date.today()
+            delta = timedelta(days=7)
+            startdate = enddate - delta
+            self.kwargs["startdate"] = startdate
+            self.kwargs["enddate"] = enddate
+            self.kwargs["startdate_string"] = startdate.strftime(DATE_FORMAT)
+            self.kwargs["enddate_string"] = startdate.strftime(DATE_FORMAT)
+        else:
+            self.kwargs["enddate_string"] = datetime.strftime(self.kwargs["enddate"], DATE_FORMAT)
+            self.kwargs["startdate_string"] = datetime.strftime(self.kwargs["startdate"], DATE_FORMAT)
+        #logger.info(request.GET)
+
     def get_queryset(self):
-        return Meals.objects.filter(user__username=self.kwargs["username"])
+        return Meals.objects.filter(user__username=self.kwargs["username"], cdate__range=(self.kwargs["startdate"], self.kwargs["enddate"])).order_by("cdate")
     def post(self, request, *args, **kwargs):
         logger.info(request.POST)
         form = InputFoodEaten(
