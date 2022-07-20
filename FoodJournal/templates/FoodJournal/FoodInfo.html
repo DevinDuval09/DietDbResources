@@ -5,17 +5,27 @@
         {% if message %}
         <p size=35>{{ message }}</p>
         {% endif %}
-        <div class="food_info">
+        <div id="food_info">
             <table>
                 <tr>
-                    <th>Food</th>
-                    <th>Calories per Unit</th>
-                    <th>Units</th>
+                    <th class="description">Food</th>
+                    <th class="number">Calories per Unit</th>
+                    <th class="number">Protein per Unit</th>
+                    <th class="number">Carbs per Unit</th>
+                    <th class="number">Total Fat per Unit</th>
+                    <th class="number">Saturated Fat per Unit</th>
+                    <th class="number">Fiber per Unit</th>
+                    <th class="units">Units</th>
                 </tr>
             {% for row in object_list %}
                 <tr>
                     <td>{{row.description}}</td>
                     <td>{{row.calories_unit}}</td>
+                    <td>{{row.protein_unit}}</td>
+                    <td>{{row.carbs_unit}}</td>
+                    <td>{{row.total_fat_unit}}</td>
+                    <td>{{row.sat_fat_unit}}</td>
+                    <td>{{row.fiber_unit}}</td>
                     <td>{{row.measurement_unit.description}}</td>
                 </tr>
             {% endfor %}

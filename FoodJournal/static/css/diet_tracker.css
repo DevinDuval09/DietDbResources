@@ -1,0 +1,32 @@
+#food_info { 
+    min-width: 600px;
+    height: 300px;
+    overflow: auto;
+}
+#food_info table {
+    min-width: 80%;
+    border: 2px solid black;
+    border-collapse:collapse;
+}
+#food_info table tr {
+    min-width: 100%;
+    text-align:left;
+    border-bottom: 2px solid black;
+}
+#food_info table th {
+    position: sticky;
+    top: 0;
+    background-color: white;
+}
+#food_info table .description {
+    min-width: 17%;
+    border:2px solid black;
+}
+#food_info table .number{
+    min-width: 12.5%;
+    border:2px solid black;
+}
+#food_info table .units{
+    min-width: 10%;
+    border:2px solid black;
+}
