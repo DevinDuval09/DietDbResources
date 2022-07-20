@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError as bad_brew
 import os
 import sqlite3
 import json
-from datetime import date
+from datetime import date, timedelta
 from .models import csv_to_model, Foods, Measurements, Meals
 
 class DatabaseTests(TestCase):
@@ -97,7 +97,7 @@ class DatabaseTests(TestCase):
             data = json.loads(js.getvalue().decode())
             self.assertTrue(test in data["error"])
 
-    def test_generate_food_journal(self):
+    def test_Mealsview_post(self):
         curr_user = User.objects.create(username="user")
         curr_user.set_password("12345")
         curr_user.save()
@@ -106,6 +106,27 @@ class DatabaseTests(TestCase):
         food = {"qty_input": 2, "food_id": 1, "date_input": date.today()}
         post = self.client.post(f"/FoodJournal/user/", data=food, follow=True)
         self.assertEquals(post.status_code, 200)
+
+    def test_Mealsview(self):
+        DEFAULT_DAYS_BACK = 7
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        dt = date(2022, 7, 1)
+        dt_strings = []
+        food = Foods.objects.get(pk=1)
+        for num in range(DEFAULT_DAYS_BACK):
+            delta = timedelta(days=num)
+            test_date = dt - delta
+            meal = Meals.create(food, num + 1, test_date, curr_user)
+            meal.save()
+            dt_strings.append(test_date.strftime('%B %d, %Y').replace(" 0", " "))
+        response = self.client.get(f"/FoodJournal/user/2022-06-25/2022-07-01/")
+        self.assertEquals(response.status_code, 200)
+        for date_string in dt_strings:
+            self.assertIn(date_string, response.content.decode())
 
     def test_add_food_form(self):
         pass
