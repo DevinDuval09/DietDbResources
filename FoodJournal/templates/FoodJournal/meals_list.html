@@ -8,13 +8,14 @@
     <label for="end_date">End Date:</label>
     <input id="end_date" type = "date" size = 35 value="{{ view.kwargs.enddate_string }}"></p>
     </div>
-    <div class="table">
-        <table class="meals">
+    <div id="food_info">
+        <table class>
             <tr>
-                <th>Date</th><th>Food</th><th>Quantity</th>
+                <th>Date</th><th>Food</th><th>Quantity</th><th>Calories</th>
             </tr>
             {% for item in object_list %}
-            <tr><td>{{item.cdate}}</td><td>{{item.food.description}}</td><td>{{item.qty}}</td></tr>
+            {% widthratio item.food.calories_unit 1 item.qty as calories %}
+            <tr><td>{{item.cdate}}</td><td>{{item.food.description}}</td><td>{{item.qty}}</td><td>{{calories}}</td></tr>
             {% endfor %}
         </table>
     </div>
