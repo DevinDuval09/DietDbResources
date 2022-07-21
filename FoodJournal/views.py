@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import login
 from django.views.generic import ListView, CreateView
+from django.db.models import Sum, FloatField, F
 from .DbUtil import *
 from .models import Meals, Foods, Measurements, get_food_model
 from sqlalchemy import select, insert
@@ -34,6 +35,40 @@ def create_user(request, *args, **kwargs):
     else:
         return render(request, "new_user.html", {"form": form})
 
+class SummaryView(ListView):
+    template_name = "FoodJournal/FoodJournal.html"
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        logger.info(kwargs)
+        if not self.kwargs.get("startdate") or not self.kwargs.get("enddate"):
+            enddate = date.today()
+            delta = timedelta(days=7)
+            startdate = enddate - delta
+            self.kwargs["startdate"] = startdate
+            self.kwargs["enddate"] = enddate
+            self.kwargs["startdate_string"] = startdate.strftime(DATE_FORMAT)
+            self.kwargs["enddate_string"] = enddate.strftime(DATE_FORMAT)
+        else:
+            self.kwargs["enddate_string"] = datetime.strftime(self.kwargs["enddate"], DATE_FORMAT)
+            self.kwargs["startdate_string"] = datetime.strftime(self.kwargs["startdate"], DATE_FORMAT)
+        #logger.info(request.GET)
+
+    def get_queryset(self):
+        #need to add aggregation search
+        q = Meals.objects.filter(user__username=self.kwargs["username"],
+                                    cdate__range=(self.kwargs["startdate"],
+                                    self.kwargs["enddate"]))\
+                        .select_related("food")\
+                        .values("cdate")\
+                        .annotate(total_calories =  Sum(F('food__calories_unit') * F('qty')))\
+                        .annotate(total_protein =   Sum(F('food__protein_unit') * F('qty')))\
+                        .annotate(total_carbs =     Sum(F('food__carbs_unit') * F('qty')))\
+                        .annotate(total_total_fat = Sum(F('food__total_fat_unit') * F('qty')))\
+                        .annotate(total_sat_fat =   Sum(F('food__sat_fat_unit') * F('qty')))\
+                        .annotate(total_fiber =     Sum(F('food__fiber_unit') * F('qty'))\
+                                )\
+                        .order_by()
+        return q
 class MealsView(ListView):
     template_name = "FoodJournal/meals_list.html"
     def setup(self, request, *args, **kwargs):
@@ -46,14 +81,16 @@ class MealsView(ListView):
             self.kwargs["startdate"] = startdate
             self.kwargs["enddate"] = enddate
             self.kwargs["startdate_string"] = startdate.strftime(DATE_FORMAT)
-            self.kwargs["enddate_string"] = startdate.strftime(DATE_FORMAT)
+            self.kwargs["enddate_string"] = enddate.strftime(DATE_FORMAT)
         else:
             self.kwargs["enddate_string"] = datetime.strftime(self.kwargs["enddate"], DATE_FORMAT)
             self.kwargs["startdate_string"] = datetime.strftime(self.kwargs["startdate"], DATE_FORMAT)
         #logger.info(request.GET)
 
     def get_queryset(self):
-        return Meals.objects.filter(user__username=self.kwargs["username"], cdate__range=(self.kwargs["startdate"], self.kwargs["enddate"])).order_by("cdate")
+        return Meals.objects.filter(user__username=self.kwargs["username"],
+                                    cdate__range=(self.kwargs["startdate"],
+                                    self.kwargs["enddate"])).order_by("cdate")
     def post(self, request, *args, **kwargs):
         logger.info(request.POST)
         form = InputFoodEaten(
