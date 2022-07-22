@@ -25,14 +25,26 @@
             {% for row in object_list %}
                 <tr>
                     <td>{{row.cdate}}</td>
-                    <td>{{row.total_calories}}</td>
-                    <td>{{row.total_protein}}</td>
-                    <td>{{row.total_carbs}}</td>
-                    <td>{{row.total_total_fat}}</td>
-                    <td>{{row.total_sat_fat}}</td>
-                    <td>{{row.total_fiber}}</td>
+                    <td name="calories">{{row.total_calories}}</td>
+                    <td name="protein">{{row.total_protein}}</td>
+                    <td name="carbs">{{row.total_carbs}}</td>
+                    <td name="fat">{{row.total_total_fat}}</td>
+                    <td name="sat_fat">{{row.total_sat_fat}}</td>
+                    <td name="fiber">{{row.total_fiber}}</td>
                 </tr>
             {% endfor %}
+                <tr>
+                    <td>AVERAGES:</td>
+                    <td id="avg_calories"></td>
+                    <td id="avg_protein"></td>
+                    <td id="avg_carbs"></td>
+                    <td id="avg_fat"></td>
+                    <td id="avg_sat_fat"></td>
+                    <td id="avg_fiber"></td>
+                </tr>
             </table>
         </div>
+{% load static %}
+<script src="{% static 'js/summary_averages.js' %}" type="text/javascript">
+</script>
 {% endblock %}
