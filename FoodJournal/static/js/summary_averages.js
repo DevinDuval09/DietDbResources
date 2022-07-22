@@ -23,7 +23,6 @@ function post_summaries(sum_array) {
         sum = 0;
         values = summary["values"]
         for (const element of values){
-            console.log(element.innerHTML)
             sum += Number(element.innerHTML)
         };
         summary["element"].innerHTML = sum / values.length;
