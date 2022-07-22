@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
     <h1>Summary</h1>
-    <div class="date_range"></div>
-        <p><label for="start_date">Start Date:</label>
-        <input id="start_date" type = "date" size = 35 value="{{ view.kwargs.startdate_string }}">
-        <label for="end_date">End Date:</label>
-        <input id="end_date" type = "date" size = 35 value="{{ view.kwargs.enddate_string }}"></p>
+    <div>
+    <form id="set_dates" method="GET">
+        <p><label for="start_date_input">Start Date:</label>
+        <input name="start_date_input" type = "date" size = 35 value="{{ startdate_string }}">
+        <label for="end_date_input">End Date:</label>
+        <input name="end_date_input" type = "date" size = 35 value="{{ enddate_string }}">
+        <button type="submit" class="btn btn-default"&gt;>Refresh View</button>
+        </p>
+    </form>
     </div>
         <div id="food_info">
             <table>
