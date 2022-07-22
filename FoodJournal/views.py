@@ -1,3 +1,4 @@
+import re
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -37,27 +38,17 @@ def create_user(request, *args, **kwargs):
 
 class SummaryView(ListView):
     template_name = "FoodJournal/FoodJournal.html"
-    def setup(self, request, *args, **kwargs):
-        super().setup(request, *args, **kwargs)
-        logger.info(kwargs)
-        if not self.kwargs.get("startdate") or not self.kwargs.get("enddate"):
-            enddate = date.today()
-            delta = timedelta(days=7)
-            startdate = enddate - delta
-            self.kwargs["startdate"] = startdate
-            self.kwargs["enddate"] = enddate
-            self.kwargs["startdate_string"] = startdate.strftime(DATE_FORMAT)
-            self.kwargs["enddate_string"] = enddate.strftime(DATE_FORMAT)
-        else:
-            self.kwargs["enddate_string"] = datetime.strftime(self.kwargs["enddate"], DATE_FORMAT)
-            self.kwargs["startdate_string"] = datetime.strftime(self.kwargs["startdate"], DATE_FORMAT)
-        #logger.info(request.GET)
 
-    def get_queryset(self):
-        #need to add aggregation search
+    def get_queryset(self, **kwargs):
+        #need to find a way to pass args to search
+        logger.info(self.request.GET)
+        default_end = datetime.strftime(date.today(), DATE_FORMAT)
+        default_start = datetime.strftime(date.today() - timedelta(days=7), DATE_FORMAT)
+        self.enddate = datetime.strptime(self.request.GET.get("end_date_input", default_end), DATE_FORMAT)
+        self.startdate = datetime.strptime(self.request.GET.get("start_date_input", default_start), DATE_FORMAT)
         q = Meals.objects.filter(user__username=self.kwargs["username"],
-                                    cdate__range=(self.kwargs["startdate"],
-                                    self.kwargs["enddate"]))\
+                                    cdate__range=(self.startdate,
+                                    self.enddate))\
                         .select_related("food")\
                         .values("cdate")\
                         .annotate(total_calories =  Sum(F('food__calories_unit') * F('qty')))\
@@ -69,6 +60,11 @@ class SummaryView(ListView):
                                 )\
                         .order_by()
         return q
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["startdate_string"] = datetime.strftime(self.startdate, DATE_FORMAT)
+        ctx["enddate_string"] = datetime.strftime(self.enddate, DATE_FORMAT)
+        return ctx
 class MealsView(ListView):
     template_name = "FoodJournal/meals_list.html"
     def setup(self, request, *args, **kwargs):
@@ -91,6 +87,7 @@ class MealsView(ListView):
         return Meals.objects.filter(user__username=self.kwargs["username"],
                                     cdate__range=(self.kwargs["startdate"],
                                     self.kwargs["enddate"])).order_by("cdate")
+
     def post(self, request, *args, **kwargs):
         logger.info(request.POST)
         form = InputFoodEaten(
