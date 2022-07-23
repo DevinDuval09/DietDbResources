@@ -2,6 +2,16 @@
 {% extends "base.html" %}
 {% block content %}
     <h1>Food Info</h1>
+    {% if errors %}
+    <div id="errors">
+        <label name="error_label">FOOD FAILED TO LOAD</label>
+        <ul name="error_list">
+            {% for error in errors %}
+            <li>{{error}}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
         {% if message %}
         <p size=35>{{ message }}</p>
         {% endif %}
@@ -38,11 +48,13 @@
     <p><label for="food_input">Enter the food description:</label>
     <input name="food_input" type = "text" size=35></p>
     <p><label for="measurement_input">Select a measurement:</label>
-    <select name="measurement_input" name="measurement_input">
+    <select name="measurement_input">
         {% for m_row in m_table %}
         <option value="{{ m_row.id }}">{{m_row.description}}</option>
         {% endfor %}
     </select>
+    <label for="measurement_qty_input">Quantity:</label>
+    <input name="measurement_qty_input" type="number" size="35" step=".5" value="0">
     </p>
     <p><label for="calorie_input">Enter the calories per measurement:</label>
     <input name="calorie_input" type = "number" size=35 step=".001" value=0></p>
@@ -58,14 +70,4 @@
     <input name="fiber_input" type = "number" size=35 step=".001" value=0></p>
 <button type="submit" class="btn btn-default"&gt;>Submit</button> 
 </form>
-{% if errors %}
-<div id="errors">
-    <label name="error_label">FOOD FAILED TO LOAD</label>
-    <ol name="error_list">
-        {% for error in errors %}
-        <li>{{error}}</li>
-        {% endfor %}
-    </ol>
-</div>
-{% endif %}
 {% endblock %}
