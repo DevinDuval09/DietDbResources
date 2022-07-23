@@ -11,7 +11,7 @@ from .models import Meals, Foods, Measurements, get_food_model
 from sqlalchemy import select, insert
 from sqlalchemy.exc import IntegrityError
 import os
-from .forms import InputFoodEaten, NewUserForm
+from .forms import InputFoodEaten, NewUserForm, AddFood
 import logging
 from datetime import date, timedelta, datetime
 
@@ -123,16 +123,35 @@ class FoodInfo(ListView):
         return context
     def post(self, request, *args, **kwargs):
         logger.info(request.POST)
-        form = AddFood({
-            "description":      request.POST.get("food_input"),
-            "calories_unit":    request.POST.get("calories_input"),
-            "protein_unit":     request.POST.get("protein_input"),
-            "carbs_unit":       request.POST.get("carbs_input"),
-            "total_fat_unit":   request.POST.get("total_fat_input"),
-            "sat_fat_unit":     request.POST.get("sat_fat_input"),
-            "fiber_unit":       request.POST.get("fiber_input"),
-            "measurement_unit": request.POST.get("measurement_input"),
-        })
+        errors = None
+        divisor = float(request.POST.get("measurement_qty_input", None))
+        if divisor and divisor > 0:
+            calories_unit = float(request.POST.get("calories_input")) / divisor
+            protein_unit =  float(request.POST.get("protein_input")) / divisor
+            carbs_unit =    float(request.POST.get("carbs_input")) / divisor
+            total_fat_unit =float(request.POST.get("total_fat_input")) / divisor
+            sat_fat_unit =  float(request.POST.get("sat_fat_input")) / divisor
+            fiber_unit =    float(request.POST.get("fiber_input")) / divisor
+            form = AddFood({
+                "description":      request.POST.get("food_input"),
+                "calories_unit":    calories_unit,
+                "protein_unit":     protein_unit,
+                "carbs_unit":       carbs_unit,
+                "total_fat_unit":   total_fat_unit,
+                "sat_fat_unit":     sat_fat_unit,
+                "fiber_unit":       fiber_unit,
+                "measurement_unit": request.POST.get("measurement_input"),
+            })
+            if form.is_valid():
+                form.save()
+        else:
+            errors = ["Measurement quantity must be above 0."]
+        if errors:
+            self.object_list = self.queryset
+            ctx = self.get_context_data(**kwargs)
+            ctx["errors"] = errors
+            return render(request, "FoodJournal/FoodInfo.html", context=ctx)
+        return redirect(reverse("food_index"))
 
 def get_food_json(request, food, *args, **kwargs):
     logger.info(f"Getting json for {food}...")
