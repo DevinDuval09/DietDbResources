@@ -1,1 +1,1 @@
-python manage.py migrate FoodJournal && python DbUtil.py
+python manage.py migrate FoodJournal && python setup.py
