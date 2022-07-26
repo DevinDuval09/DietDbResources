@@ -1,4 +1,3 @@
-import re
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -39,6 +38,12 @@ def create_user(request, *args, **kwargs):
 class SummaryView(ListView):
     template_name = "FoodJournal/FoodJournal.html"
 
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.id is None:
+            return redirect("/login/")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self, **kwargs):
         #need to find a way to pass args to search
         logger.info(self.request.GET)
@@ -68,6 +73,8 @@ class SummaryView(ListView):
 class MealsView(ListView):
     template_name = "FoodJournal/meals_list.html"
     def setup(self, request, *args, **kwargs):
+        if (request.user.id is None):
+            redirect("/login/")
         super().setup(request, *args, **kwargs)
         logger.info(kwargs)
         if not self.kwargs.get("startdate") or not self.kwargs.get("enddate"):
@@ -83,12 +90,19 @@ class MealsView(ListView):
             self.kwargs["startdate_string"] = datetime.strftime(self.kwargs["startdate"], DATE_FORMAT)
         #logger.info(request.GET)
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.id is None:
+            return redirect("/login/")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         return Meals.objects.filter(user__username=self.kwargs["username"],
                                     cdate__range=(self.kwargs["startdate"],
                                     self.kwargs["enddate"])).order_by("cdate")
 
     def post(self, request, *args, **kwargs):
+        if (request.user.id is None):
+            redirect("/login/")
         logger.info(request.POST)
         form = InputFoodEaten(
             {
@@ -121,12 +135,21 @@ class FoodInfo(ListView):
         context = super().get_context_data(**kwargs)
         context["m_table"] = Measurements.objects.all()
         return context
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.id is None:
+            return redirect("/login/")
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
+        logger.info(f"{request.user.id}")
         logger.info(request.POST)
+        if (request.user.id is None):
+            redirect("/login/")
         errors = None
         divisor = float(request.POST.get("measurement_qty_input", None))
         if divisor and divisor > 0:
-            calories_unit = float(request.POST.get("calories_input")) / divisor
+            calories_unit = float(request.POST.get("calorie_input")) / divisor
             protein_unit =  float(request.POST.get("protein_input")) / divisor
             carbs_unit =    float(request.POST.get("carbs_input")) / divisor
             total_fat_unit =float(request.POST.get("total_fat_input")) / divisor
