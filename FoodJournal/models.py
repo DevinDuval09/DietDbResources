@@ -114,3 +114,6 @@ def get_food_model(food:str)->dict:
     except Foods.DoesNotExist:
         error_dict = {"error": f"{food} is not in database."}
         return error_dict
+
+if __name__ == "__main__":
+    csv_to_model(file_path)
