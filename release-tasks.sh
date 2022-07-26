@@ -1,1 +1,1 @@
-python manage.py migrate FoodJournal && python setup.py
+python manage.py migrate FoodJournal
