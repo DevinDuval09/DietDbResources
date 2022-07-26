@@ -211,6 +211,24 @@ class FoodJournalTests(TestCase):
         self.assertIn(message, post.content.decode())
         self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="test")
 
+    def test_add_food_not_logged_in(self):
+        message = "FOOD FAILED TO LOAD"
+        food = {
+                "food_input":      "test",
+                "calories_input":    1,
+                "protein_input":     1,
+                "carbs_input":       1,
+                "total_fat_input":   1,
+                "sat_fat_input":     1,
+                "fiber_input":       1,
+                "measurement_input": 1,
+                "measurement_qty_input": 0
+            }
+        post = self.client.post(f"/FoodInfo/", food, follow=True)
+        self.assertEquals(post.status_code, 200)
+        self.assertIn(message, post.content.decode())
+        self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="test")
+
 
 
 
