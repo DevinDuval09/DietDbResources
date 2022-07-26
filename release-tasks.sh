@@ -1,1 +1,1 @@
-python manage.py migrate --fake FoodJournal zero && python manage.py migrate FoodJournal
+python manage.py migrate --fake DietTracker zero && python manage.py migrate DietTracker
