@@ -1,1 +1,1 @@
-python manage.py migrate FoodJournal && python ./FoodJournal/models.py
+python manage.py migrate FoodJournal && python ./FoodJournal/DbUtil.py
