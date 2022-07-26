@@ -1,40 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-    <h1>My Food Journal</h1>
-        <div class="food_entry">
+    <h1>Summary</h1>
+    <div>
+    <form id="set_dates" method="GET">
+        <p><label for="start_date_input">Start Date:</label>
+        <input name="start_date_input" type = "date" size = 35 value="{{ startdate_string }}">
+        <label for="end_date_input">End Date:</label>
+        <input name="end_date_input" type = "date" size = 35 value="{{ enddate_string }}">
+        <button type="submit" class="btn btn-default"&gt;>Refresh View</button>
+        </p>
+    </form>
+    </div>
+        <div id="food_info">
             <table>
                 <tr>
                     <th>Date</th>
-                    <th>Food</th>
-                    <th>Quantity</th>
                     <th>Total Calories</th>
+                    <th>Total Protein</th>
+                    <th>Total Carbs</th>
+                    <th>Total Fat</th>
+                    <th>Total Saturated Fat</th>
+                    <th>Total Fiber</th>
                 </tr>
-            {% for row in rows %}
+            {% for row in object_list %}
                 <tr>
-                    <td>{{row.0}}</td>
-                    <td>{{row.1}}</td>
-                    <td>{{row.2}}</td>
-                    <td>{{row.3}}</td>
+                    <td>{{row.cdate}}</td>
+                    <td name="calories">{{row.total_calories}}</td>
+                    <td name="protein">{{row.total_protein}}</td>
+                    <td name="carbs">{{row.total_carbs}}</td>
+                    <td name="fat">{{row.total_total_fat}}</td>
+                    <td name="sat_fat">{{row.total_sat_fat}}</td>
+                    <td name="fiber">{{row.total_fiber}}</td>
                 </tr>
             {% endfor %}
+                <tr>
+                    <td>AVERAGES:</td>
+                    <td id="avg_calories"></td>
+                    <td id="avg_protein"></td>
+                    <td id="avg_carbs"></td>
+                    <td id="avg_fat"></td>
+                    <td id="avg_sat_fat"></td>
+                    <td id="avg_fiber"></td>
+                </tr>
             </table>
         </div>
-{% endblock %}
-{% block inputbox %}
-<form id="add_food" method="post">
-    {% csrf_token %}
-    <p><label for="date_input">Enter the date:</label>
-    <input name="date_input" type = "date" size = 35></p>
-    <p><label for="food_input">Enter the food eaten:</label>
-    <input name="food_input" type = "text" size=35>
-    <input name="food_id" type="hidden"></p>
-    <p><label for="qty_input">Enter the quantity eaten:</label>
-    <input name="qty_input" type = "numeric" size=35></p>
-    <p><label for="total_cals">Total Calories:</label>
-    <label name="total_cals" id="total_cals" size=35></p>
-    <p><button type="submit" class="btn btn-default"&gt;>Submit</button></p> 
-</form>
 {% load static %}
-<script src="{% static 'js/total_calories.js' %}" type="text/javascript">
+<script src="{% static 'js/summary_averages.js' %}" type="text/javascript">
 </script>
 {% endblock %}

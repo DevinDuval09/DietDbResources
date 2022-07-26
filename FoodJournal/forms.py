@@ -20,13 +20,13 @@ class InputFoodEaten(ModelForm):
         fields = ["cdate", "food", "qty", "user"]
         widgets = {
             "cdate"      : DateInput(attrs={"class":"datepicker"}),
-            "food"      : NumberInput(attrs={"required":True}),#ChoiceField(choices = FOOD_CHOICES, required=True),
+            "food"      : NumberInput(attrs={"required":True}),
             "qty"       : NumberInput(attrs={"required": True}),
             "user"      : NumberInput(attrs={"required": True})
         }
         labels = {"cdate": "Date:", "food": "Food:", "qty": "Quantity:"}
 
-class AddFood(Form):
+class AddFood(ModelForm):
     class Meta:
         model = Foods
         fields =    ["description",
@@ -36,7 +36,8 @@ class AddFood(Form):
                     "total_fat_unit",
                     "sat_fat_unit",
                     "fiber_unit",
-                    "measurement_unit"]
+                    "measurement_unit",
+                    ]
         widgets = {
             "description":      TextInput(attrs={"required": True}),
             "calories_unit":    NumberInput(attrs={"required": True}),
@@ -55,6 +56,6 @@ class AddFood(Form):
             "total_fat_unit": "Total Fat",
             "sat_fat_unit": "Saturated Fat",
             "fiber_unit": "Fiber",
-            "measurement_unit": "Measurements"
+            "measurement_unit": "Measurements",
         }
 

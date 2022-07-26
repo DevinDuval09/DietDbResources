@@ -92,8 +92,8 @@ class Meals(models.Model):
     cdate = models.DateField(null=False, db_column="date")
     user = models.ForeignKey(User, on_delete=CASCADE, db_column="user")
     @classmethod
-    def create(clss, food:int, qty:float, date, user:int):
-        return clss(food=food, qty=qty, date=date, user=user)
+    def create(clss, food:Foods, qty:float, date, user:User):
+        return clss(food=food, qty=qty, cdate=date, user=user)
 
 def get_food_model(food:str)->dict:
     try:

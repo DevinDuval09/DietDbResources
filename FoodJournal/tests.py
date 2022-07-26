@@ -6,6 +6,7 @@ from django.http.request import HttpRequest
 from django.contrib.auth.models import User
 from importlib import import_module
 from django.conf import settings
+from django.db import transaction
 from sqlalchemy import Date, Table, Column, MetaData, Integer, Identity, Text, Numeric, ForeignKey
 from sqlalchemy import create_engine, select
 from sqlalchemy.engine import Engine
@@ -13,18 +14,24 @@ from sqlalchemy.exc import IntegrityError as bad_brew
 import os
 import sqlite3
 import json
-from datetime import date
+from datetime import date, timedelta
 from .models import csv_to_model, Foods, Measurements, Meals
 
-class DatabaseTests(TestCase):
+class FoodJournalTests(TestCase):
     fixtures = ["users_fixtures.json"]
     def setUp(self):
+        food_int = 100
         self.user = User.objects.get(pk=1)
         self.csv_file = os.path.dirname(__file__) + '\csv\RawFoodData.csv'
         try:
             csv_to_model(self.csv_file)
         except sqlite3.IntegrityError or bad_brew:
             print("failed to load csv")
+        with transaction.atomic():
+            test_food = Foods.create("test_food", food_int, food_int, food_int, food_int, food_int, food_int, Measurements.objects.get(pk=1))
+            test_food.save()
+        self.test_food = Foods.objects.get(description="test_food")
+        self.food_int = food_int
 
     def tearDown(self):
         pass
@@ -97,7 +104,7 @@ class DatabaseTests(TestCase):
             data = json.loads(js.getvalue().decode())
             self.assertTrue(test in data["error"])
 
-    def test_generate_food_journal(self):
+    def test_Mealsview_post(self):
         curr_user = User.objects.create(username="user")
         curr_user.set_password("12345")
         curr_user.save()
@@ -107,8 +114,120 @@ class DatabaseTests(TestCase):
         post = self.client.post(f"/FoodJournal/user/", data=food, follow=True)
         self.assertEquals(post.status_code, 200)
 
-    def test_add_food_form(self):
-        pass
+    def test_Mealsview(self):
+        DEFAULT_DAYS_BACK = 7
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        dt = date(2022, 7, 1)
+        dt_strings = []
+        food = Foods.objects.get(pk=1)
+        for num in range(DEFAULT_DAYS_BACK):
+            delta = timedelta(days=num)
+            test_date = dt - delta
+            meal = Meals.create(food, num + 1, test_date, curr_user)
+            meal.save()
+            dt_strings.append(test_date.strftime('%B %d, %Y').replace(" 0", " "))
+        response = self.client.get(f"/FoodJournal/user/2022-06-25/2022-07-01/")
+        self.assertEquals(response.status_code, 200)
+        for date_string in dt_strings:
+            self.assertIn(date_string, response.content.decode())
+        meal = Meals.objects.get(cdate=dt)
+        self.assertTrue(meal)
+
+    def test_summaryview(self):
+        DEFAULT_DAYS_BACK = 7
+        food_int = 100
+        username = "user"
+        curr_user = User.objects.create(username=username)
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username=username, password="12345")
+        self.assertTrue(login)
+        end_dt = date(2022, 7, 3)
+        start_dt = end_dt - timedelta(DEFAULT_DAYS_BACK)
+        dt_strings = []
+        url_default = f"/FoodJournal/{username}/summary/"
+        url = f"/FoodJournal/{username}/summary/?start_date_input={start_dt.isoformat()}&end_date_input={end_dt.isoformat()}"
+        for num in range(DEFAULT_DAYS_BACK):
+            delta = timedelta(days=num)
+            test_date = end_dt - delta
+            meal = Meals.create(self.test_food, 1, test_date, curr_user)
+            meal.save()
+            dt_strings.append(test_date.strftime('%B %d, %Y').replace(" 0", " "))
+        response = self.client.get(url_default)
+        self.assertEquals(response.status_code, 200)
+        self.assertNotIn(str(food_int), response.content.decode())
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 200)
+        for date_string in dt_strings:
+            self.assertIn(date_string, response.content.decode())
+        self.assertIn(str(self.food_int), response.content.decode())
+
+    def test_AddFood_valid(self):
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        food = {
+                "food_input":      "test",
+                "calorie_input":    1,
+                "protein_input":     1,
+                "carbs_input":       1,
+                "total_fat_input":   1,
+                "sat_fat_input":     1,
+                "fiber_input":       1,
+                "measurement_input": 1,
+                "measurement_qty_input": 1
+            }
+        post = self.client.post(f"/FoodInfo/", food, follow=True)
+        self.assertEquals(post.status_code, 200)
+        food = Foods.objects.get(description="test")
+        self.assertTrue(food)
+
+    def test_AddFood_invalid(self):
+        message = "FOOD FAILED TO LOAD"
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        food = {
+                "food_input":      "test",
+                "calorie_input":    1,
+                "protein_input":     1,
+                "carbs_input":       1,
+                "total_fat_input":   1,
+                "sat_fat_input":     1,
+                "fiber_input":       1,
+                "measurement_input": 1,
+                "measurement_qty_input": 0
+            }
+        post = self.client.post(f"/FoodInfo/", food, follow=True)
+        self.assertEquals(post.status_code, 200)
+        self.assertIn(message, post.content.decode())
+        self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="test")
+
+    def test_add_food_not_logged_in(self):
+        message = "Login"
+        food = {
+                "food_input":      "test",
+                "calorie_input":    1,
+                "protein_input":     1,
+                "carbs_input":       1,
+                "total_fat_input":   1,
+                "sat_fat_input":     1,
+                "fiber_input":       1,
+                "measurement_input": 1,
+                "measurement_qty_input": 0
+            }
+        post = self.client.post(f"/FoodInfo/", food, follow=True)
+        self.assertEquals(post.status_code, 200)
+        self.assertIn(message, post.content.decode())
+        self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="test")
 
 
 
