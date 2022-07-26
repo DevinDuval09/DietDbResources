@@ -1,6 +1,6 @@
 import os
 import dj_database_url
-from ..DietTracker.settings import *
+from .settings import *
 
 DATABASES = {
     "default": dj_database_url.config(
