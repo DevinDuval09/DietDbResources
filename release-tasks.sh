@@ -1,0 +1,1 @@
+python manage.py migrate --fake FoodJournal zero && python manage.py migrate FoodJournal
