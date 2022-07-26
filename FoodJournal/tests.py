@@ -174,7 +174,7 @@ class FoodJournalTests(TestCase):
         self.assertTrue(login)
         food = {
                 "food_input":      "test",
-                "calories_input":    1,
+                "calorie_input":    1,
                 "protein_input":     1,
                 "carbs_input":       1,
                 "total_fat_input":   1,
@@ -197,7 +197,7 @@ class FoodJournalTests(TestCase):
         self.assertTrue(login)
         food = {
                 "food_input":      "test",
-                "calories_input":    1,
+                "calorie_input":    1,
                 "protein_input":     1,
                 "carbs_input":       1,
                 "total_fat_input":   1,
@@ -212,10 +212,10 @@ class FoodJournalTests(TestCase):
         self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="test")
 
     def test_add_food_not_logged_in(self):
-        message = "FOOD FAILED TO LOAD"
+        message = "Login"
         food = {
                 "food_input":      "test",
-                "calories_input":    1,
+                "calorie_input":    1,
                 "protein_input":     1,
                 "carbs_input":       1,
                 "total_fat_input":   1,
