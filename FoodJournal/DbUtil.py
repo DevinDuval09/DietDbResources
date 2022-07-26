@@ -11,7 +11,7 @@ from sqlalchemy.orm import registry
 from sqlalchemy.orm.session import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError, OperationalError, NoReferencedTableError
 from pathlib import Path
-from FoodJournal.models import csv_to_model, file_path
+from .models import csv_to_model, file_path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATABASE_NAME = 'db.sqlite3'
