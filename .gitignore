@@ -3,3 +3,4 @@ DietTrackerEnv/
 passwords.txt
 *.sqlite3
 */__pycache__/
+key.txt
