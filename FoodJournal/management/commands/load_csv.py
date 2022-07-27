@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from FoodJournal.models import Measurements, Foods
+from django.db.utils import IntegrityError
 import csv
 
 food_description = 0
@@ -26,7 +27,11 @@ class Command(BaseCommand):
                 measure_string = row[MEASUREMENT].lower().strip()
                 if measure_string == 'measurement':
                     continue
-                id = Measurements.objects.filter(description=measure_string)
+                id = None
+                try:
+                    id = Measurements.objects.get(description=measure_string)
+                except Measurements.DoesNotExist:
+                    pass
                 if id:
                     measurement_dict[measure_string] = id
                 else:
@@ -40,6 +45,8 @@ class Command(BaseCommand):
         with open(options["file_path"], "r") as file:
             data = []
             for row in csv.reader(file):
+                if row[calories].lower().strip() == "calories":
+                    continue
                 total_count += 1
                 data_dict = {}
                 try:
@@ -58,9 +65,13 @@ class Command(BaseCommand):
                         Foods.objects.bulk_create(data)
                         success_count += 50
                         data = []
-                except Exception:
+                except IntegrityError as error:
+                    self.stderr.write(str(error))
                     continue
             if data:
-                success_count += len(data)
-                Foods.objects.bulk_create(data)
+                try:
+                    Foods.objects.bulk_create(data)
+                    success_count += len(data)
+                except IntegrityError as error:
+                    self.stderr.write(str(error))
         self.stdout.write(f"Added {success_count} of {total_count} foods.")
