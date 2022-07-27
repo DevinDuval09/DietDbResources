@@ -53,7 +53,7 @@ def csv_to_model(path:str)->None:
 class Measurements(models.Model):
     class Meta:
         db_table = "Measurements"
-    id = models.IntegerField(primary_key=True, auto_created=True)
+    #id = models.IntegerField(primary_key=True, auto_created=True)
     description = models.CharField(unique=True, null=False, max_length=100)
     @classmethod
     def create(clss, description:str):
@@ -63,7 +63,7 @@ class Measurements(models.Model):
 class Foods(models.Model):
     class Meta:
         db_table = "Foods"
-    id = models.IntegerField(primary_key=True, auto_created=True)
+    #id = models.IntegerField(primary_key=True, auto_created=True)
     description = models.CharField(unique=True, null=False, max_length=100)
     calories_unit = models.DecimalField(**decimal_options)
     protein_unit = models.DecimalField(**decimal_options)
@@ -86,7 +86,7 @@ class Foods(models.Model):
 class Meals(models.Model):
     class Meta:
         db_table = "Meals"
-    id = models.IntegerField(primary_key=True, auto_created=True)
+    #id = models.IntegerField(primary_key=True, auto_created=True)
     food = models.ForeignKey("Foods", null=False, on_delete=CASCADE, db_column="food")
     qty = models.DecimalField(**decimal_options)
     cdate = models.DateField(null=False, db_column="date")
