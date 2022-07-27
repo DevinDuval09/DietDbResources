@@ -2,5 +2,7 @@ DietTracker/__pycache__/
 DietTrackerEnv/
 passwords.txt
 *.sqlite3
+*/management/__pycache__/
 */__pycache__/
+*/management/commands/__pycache__/
 key.txt
