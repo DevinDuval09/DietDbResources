@@ -63,4 +63,4 @@ class Command(BaseCommand):
             if data:
                 success_count += len(data)
                 Foods.objects.bulk_create(data)
-        self.stdout.write(f"Added {total_count} of {success_count} foods.")
+        self.stdout.write(f"Added {success_count} of {total_count} foods.")
