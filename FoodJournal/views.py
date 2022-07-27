@@ -26,12 +26,12 @@ class IsoStringDateConverter:
 
 def create_user(request, *args, **kwargs):
     form = NewUserForm(request.POST)
-    redirect_page = request.POST.get("user_index", "/")
     if form.is_valid():
         user = form.save(commit=False)
         user.save()
+        redirect_page = "/FoodInfo/"
         login(request, user)
-        return HttpResponseRedirect(redirect_to=redirect_page)
+        return HttpResponseRedirect(redirect_page)
     else:
         return render(request, "new_user.html", {"form": form})
 
