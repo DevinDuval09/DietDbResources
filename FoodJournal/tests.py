@@ -7,25 +7,36 @@ from django.contrib.auth.models import User
 from importlib import import_module
 from django.conf import settings
 from django.db import transaction
+from django.core.management import call_command
 from sqlalchemy import Date, Table, Column, MetaData, Integer, Identity, Text, Numeric, ForeignKey
-from sqlalchemy import create_engine, select
-from sqlalchemy.engine import Engine
-from sqlalchemy.exc import IntegrityError as bad_brew
 import os
 import sqlite3
 import json
 from datetime import date, timedelta
 from .models import csv_to_model, Foods, Measurements, Meals
 
+class CommandsTest(TestCase):
+    def setUp(self):
+        self.csv_file = os.path.dirname(__file__) + "/fixtures/test_csv.csv"
+    def test_load_csv(self):
+        test_food = "tofu"
+        call_command("load_csv", self.csv_file)
+        try:
+            food = Foods.objects.get(description=test_food)
+            self.assertTrue(food.description == test_food)
+        except Foods.DoesNotExist:
+            self.assertTrue(False)
+        
+
 class FoodJournalTests(TestCase):
     fixtures = ["users_fixtures.json"]
     def setUp(self):
         food_int = 100
         self.user = User.objects.get(pk=1)
-        self.csv_file = os.path.dirname(__file__) + '\csv\RawFoodData.csv'
+        self.csv_file = os.path.dirname(__file__) + '/fixtures/test_csv.csv'
         try:
-            csv_to_model(self.csv_file)
-        except sqlite3.IntegrityError or bad_brew:
+            call_command("load_csv", self.csv_file)
+        except sqlite3.IntegrityError:
             print("failed to load csv")
         with transaction.atomic():
             test_food = Foods.create("test_food", food_int, food_int, food_int, food_int, food_int, food_int, Measurements.objects.get(pk=1))
@@ -46,31 +57,6 @@ class FoodJournalTests(TestCase):
         self.assertTrue(food_count > 0)
         self.assertTrue(measurement_count > 0)
 
-    '''def test_get_id(self):
-        test = "test"
-        correct = 0
-        s = select(measurements)
-        with self.engine.connect() as conn:
-            conn.execute(measurements.insert().values(description=test))
-            conn.commit()
-            results = conn.execute(s)
-            for row in results:
-                correct += 1
-        id = get_id(measurements, measurements.c.description, test, self.engine)
-        self.assertEquals(correct, id)
-
-    def test_get_id_not_found(self):
-        invalid = "invalid"
-        id = get_id(measurements, measurements.c.description, invalid, self.engine)
-        self.assertEquals(id, 0)
-
-    def test_add_measurement(self):
-        test = "test"
-        with self.engine.connect() as conn:
-            add_measurement(test, conn)
-        id = get_id(measurements, measurements.c.description, test, self.engine)
-        self.assertTrue(id > 0)'''
-
     def test_get_food_model(self):
         test = "pork shoulder"
         test_dict = get_food_model(test)
@@ -82,8 +68,6 @@ class FoodJournalTests(TestCase):
         test3 = "pinto beans"
         tests = [test1, test2, test3]
         for test in tests:
-            food = Foods.create(test, 1, 1, 1, 1, 1, 1, Measurements.objects.get(id=1))
-            food.save()
             request = HttpRequest()
             request.method = "GET"
             request.path = "FoodJournal/get_food_json/" + test
