@@ -213,6 +213,44 @@ class FoodJournalTests(TestCase):
         self.assertIn(message, post.content.decode())
         self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="test")
 
+    def test_create_user_redirect(self):
+        password = "Abcd!@#123"
+        new_user = {
+            "username": "test123",
+            "email":    "test@email.com",
+            "password1": password,
+            "passowrd2": password
+        }
+        post = self.client.post(f"/register/", new_user, follow=False)
+        self.assertEquals(post.status_code, 200)
+
+    def test_add_food_to_json(self):
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="test")
+        food = {
+                "food_input":      "test",
+                "calorie_input":    1,
+                "protein_input":     1,
+                "carbs_input":       1,
+                "total_fat_input":   1,
+                "sat_fat_input":     1,
+                "fiber_input":       1,
+                "measurement_input": 1,
+                "measurement_qty_input": 1
+            }
+        post = self.client.post(f"/FoodInfo/", food, follow=True)
+        food = Foods.objects.get(description="test")
+        json = self.client.get("/FoodInfo/get_food_json/test")
+        self.assertEquals(json.status_code, 301)
+        self.assertEquals(post.status_code, 200)
+        food_data = {"qty_input": 2, "food_id": food.id, "date_input": date.today()}
+        meal_post = self.client.post("/FoodJournal/test/meals/", food_data, follow=True)
+        meal = Meals.objects.get(cdate=food_data["date_input"], food=food)
+        self.assertEquals(meal.user, curr_user)
 
 
 
