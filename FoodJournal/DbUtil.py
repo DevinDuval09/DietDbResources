@@ -11,6 +11,7 @@ from sqlalchemy.orm import registry
 from sqlalchemy.orm.session import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError, OperationalError, NoReferencedTableError
 from pathlib import Path
+from .models import csv_to_model, file_path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATABASE_NAME = 'db.sqlite3'
@@ -23,7 +24,6 @@ host='127.0.0.1'
 port=6000
 gosling = 'psycopg2'
 
-file_path = './csv/RawFoodData.csv'
 food_description = 0
 calories = 1
 protein = 2
@@ -240,5 +240,5 @@ if __name__ == "__main__":
     #deletes current db, creates the database and loads the csv file
     #users = Table("auth_user", meta, auto_load=engine)
     #meta.create_all(bind=engine)
-    load_foodinfo_csv(csv_file)
+    csv_to_model(file_path)
 
