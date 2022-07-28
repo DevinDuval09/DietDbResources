@@ -86,7 +86,6 @@ class MealsView(ListView):
         else:
             self.kwargs["enddate_string"] = datetime.strftime(self.kwargs["enddate"], DATE_FORMAT)
             self.kwargs["startdate_string"] = datetime.strftime(self.kwargs["startdate"], DATE_FORMAT)
-        #logger.info(request.GET)
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.id is None:
