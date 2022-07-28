@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import login
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 from django.db.models import Sum, F
 from .models import Meals, Foods, Measurements, get_food_model
 from .forms import InputFoodEaten, NewUserForm, AddFood
@@ -68,6 +68,33 @@ class SummaryView(ListView):
         ctx["startdate_string"] = datetime.strftime(self.startdate, DATE_FORMAT)
         ctx["enddate_string"] = datetime.strftime(self.enddate, DATE_FORMAT)
         return ctx
+
+class MealDetail(DetailView):
+    template_name = "FoodJournal/MealDetail.html"
+    queryset = Meals.objects.all()
+    def dispatch(self, request, *args, **kwargs):
+        meal = Meals.objects.get(pk=kwargs["pk"])
+        if request.user.id is None:
+            return redirect("/login/")
+        elif request.user.id != meal.user.id:
+            return HttpResponse("Page not found. Are you sure you have the right meal number?", status=200)
+        return super().dispatch(request, *args, **kwargs)
+    def post(self, request, *args, **kwargs):
+        if request.user.id is None:
+            return redirect("/login/")
+        form = InputFoodEaten(
+            {
+                'cdate':    datetime.strptime(request.POST.get("date_input"), '%Y-%m-%d').date(),
+                'qty':      float(request.POST.get("qty_input")),
+                'food':     int(request.POST.get("food_id")),
+                'user':     int(request.user.id)
+            }
+        )
+        if form.is_valid():
+            meal = form.save(commit=False)
+            meal.pk = kwargs["pk"]
+            meal.save(update_fields=["cdate", "qty"])
+            return(redirect(reverse("edit_meal", kwargs={"pk": meal.pk, "username": meal.user.username})))
 class MealsView(ListView):
     template_name = "FoodJournal/meals_list.html"
     def setup(self, request, *args, **kwargs):
