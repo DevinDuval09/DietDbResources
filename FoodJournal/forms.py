@@ -13,7 +13,6 @@ class NewUserForm(UserCreationForm):
         fields = UserCreationForm.Meta.fields + ("email",)
         labels = {"email": ("Email address:")}
 
-
 class InputFoodEaten(ModelForm):
     class Meta:
         model = Meals
