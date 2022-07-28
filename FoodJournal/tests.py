@@ -14,6 +14,7 @@ import sqlite3
 import json
 from datetime import date, timedelta
 from .models import csv_to_model, Foods, Measurements, Meals
+from .views import ILLEGAL_CHARACTERS
 
 class CommandsTest(TestCase):
     def setUp(self):
@@ -70,7 +71,7 @@ class FoodJournalTests(TestCase):
         for test in tests:
             request = HttpRequest()
             request.method = "GET"
-            request.path = "FoodJournal/get_food_json/" + test
+            request.path = "FoodInfo/get_food_json/" + test + "/"
             js = get_food_json(request, test)
             data = json.loads(js.getvalue().decode())
             self.assertEquals(test, data["description"])
@@ -83,7 +84,7 @@ class FoodJournalTests(TestCase):
         for test in tests:
             request = HttpRequest()
             request.method = "GET"
-            request.path = "FoodJournal/get_food_json/" + test
+            request.path = "FoodInfo/get_food_json/" + test + "/"
             js = get_food_json(request, test)
             data = json.loads(js.getvalue().decode())
             self.assertTrue(test in data["error"])
@@ -224,33 +225,58 @@ class FoodJournalTests(TestCase):
         post = self.client.post(f"/register/", new_user, follow=False)
         self.assertEquals(post.status_code, 200)
 
-    def test_add_food_to_json(self):
+    def test_FoodInfo_post_illegal_description(self):
         curr_user = User.objects.create(username="user")
         curr_user.set_password("12345")
         curr_user.save()
         login = self.client.login(username="user", password="12345")
         self.assertTrue(login)
-        self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="test")
-        food = {
-                "food_input":      "test",
-                "calorie_input":    1,
-                "protein_input":     1,
-                "carbs_input":       1,
-                "total_fat_input":   1,
-                "sat_fat_input":     1,
-                "fiber_input":       1,
-                "measurement_input": 1,
-                "measurement_qty_input": 1
-            }
-        post = self.client.post(f"/FoodInfo/", food, follow=True)
-        food = Foods.objects.get(description="test")
-        json = self.client.get("/FoodInfo/get_food_json/test")
-        self.assertEquals(json.status_code, 301)
-        self.assertEquals(post.status_code, 200)
-        food_data = {"qty_input": 2, "food_id": food.id, "date_input": date.today()}
-        meal_post = self.client.post("/FoodJournal/test/meals/", food_data, follow=True)
-        meal = Meals.objects.get(cdate=food_data["date_input"], food=food)
-        self.assertEquals(meal.user, curr_user)
+        for ch in ILLEGAL_CHARACTERS:
+            test_name = "test" + ch + "name"
+            self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description=test_name)
+            food = {
+                    "food_input":      test_name,
+                    "calorie_input":    1,
+                    "protein_input":     1,
+                    "carbs_input":       1,
+                    "total_fat_input":   1,
+                    "sat_fat_input":     1,
+                    "fiber_input":       1,
+                    "measurement_input": 1,
+                    "measurement_qty_input": 1
+                }
+            post = self.client.post(f"/FoodInfo/", food, follow=True)
+            self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description=test_name)
+            self.assertEquals(post.status_code, 200)
+            self.assertIn("FOOD FAILED TO LOAD", post.content.decode())
+
+    def test_get_json_weird_characters(self):
+        weird_characters = ["'", "%"]
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        for ch in weird_characters:
+            test_name = "test" + ch + "name"
+            self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description=test_name)
+            food = {
+                    "food_input":      test_name,
+                    "calorie_input":    1,
+                    "protein_input":     1,
+                    "carbs_input":       1,
+                    "total_fat_input":   1,
+                    "sat_fat_input":     1,
+                    "fiber_input":       1,
+                    "measurement_input": 1,
+                    "measurement_qty_input": 1
+                }
+            self.client.post(f"/FoodInfo/", food, follow=True)
+            food = Foods.objects.get(description=test_name)
+            self.assertEquals(test_name, food.description)
+            json_resp = self.client.get(f"/FoodInfo/get_food_json/{test_name}/")
+            food_dict = json.loads(json_resp.content)
+            self.assertEquals(test_name, food_dict["description"])
 
 
 
