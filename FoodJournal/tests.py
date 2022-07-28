@@ -1,14 +1,11 @@
-from .DbUtil import *
 from .models import *
-from .views import get_food_json, create_user
-from django.test import TestCase, TransactionTestCase, LiveServerTestCase
+from .views import get_food_json
+from django.test import TestCase
 from django.http.request import HttpRequest
 from django.contrib.auth.models import User
-from importlib import import_module
 from django.conf import settings
 from django.db import transaction
 from django.core.management import call_command
-from sqlalchemy import Date, Table, Column, MetaData, Integer, Identity, Text, Numeric, ForeignKey
 import os
 import sqlite3
 import json
@@ -277,6 +274,40 @@ class FoodJournalTests(TestCase):
             json_resp = self.client.get(f"/FoodInfo/get_food_json/{test_name}/")
             food_dict = json.loads(json_resp.content)
             self.assertEquals(test_name, food_dict["description"])
+
+    def test_MealDetail(self):
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        test_food = "test_name"
+        food = {
+                "food_input":       test_food,
+                "calorie_input":     1,
+                "protein_input":     1,
+                "carbs_input":       1,
+                "total_fat_input":   1,
+                "sat_fat_input":     1,
+                "fiber_input":       1,
+                "measurement_input": 1,
+                "measurement_qty_input": 1
+            }
+        qty_eaten = 1
+        post = self.client.post(f"/FoodInfo/", food, follow=True)
+        self.assertEquals(post.status_code, 200)
+        new_food = Foods.objects.get(description=test_food)
+        meal = {"qty_input": qty_eaten, "food_id": new_food.id, "date_input": date.today()}
+        post_meal = self.client.post(f"/FoodJournal/{curr_user.username}/", meal)
+        self.assertEquals(post_meal.status_code, 302)
+        meal_obj = Meals.objects.get(user=curr_user, cdate=date.today())
+        self.assertEquals(meal_obj.qty, qty_eaten)
+        update_meal = {"qty_input": qty_eaten + 1, "food_id": new_food.id, "date_input": date.today()}
+        update_post = self.client.post(f"/FoodJournal/{curr_user.username}/meals/{meal_obj.id}/", update_meal)
+        self.assertEquals(update_post.status_code, 302)
+        meal_obj.refresh_from_db()
+        self.assertEquals(int(meal_obj.qty), qty_eaten + 1)
+
 
 
 
