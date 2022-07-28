@@ -3,16 +3,14 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import login
-from django.views.generic import ListView, CreateView
-from django.db.models import Sum, FloatField, F
-from .DbUtil import *
+from django.views.generic import ListView
+from django.db.models import Sum, F
 from .models import Meals, Foods, Measurements, get_food_model
-from sqlalchemy import select, insert
-from sqlalchemy.exc import IntegrityError
-import os
 from .forms import InputFoodEaten, NewUserForm, AddFood
 import logging
 from datetime import date, timedelta, datetime
+
+ILLEGAL_CHARACTERS = [':', '/', '?', '#', '[', ']', '@', '!', '$', '&', '(', ')', '*', '+', '=']
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +125,12 @@ def test_page(request, *args, **kwargs):
         body += "\n".join([f"\t{tup}" for tup in kwargs.items()])
     return HttpResponse(body, content_type="text/plain")
 
+def _validate_food_name(food:str)->bool:
+    for ch in ILLEGAL_CHARACTERS:
+        if ch in food:
+            return False
+    return True
+
 class FoodInfo(ListView):
     template_name = "FoodJournal/FoodInfo.html"
     model = Foods
@@ -147,6 +151,19 @@ class FoodInfo(ListView):
         if (request.user.id is None):
             redirect("/login/")
         errors = None
+        try:
+            if not _validate_food_name(request.POST.get("food_input")):
+                self.object_list = self.queryset
+                ctx = self.get_context_data(**kwargs)
+                errors = ["Food descriptions cannot contain the following characters: " + " ".join(ILLEGAL_CHARACTERS)]
+                ctx["errors"] = errors
+                return render(request, "FoodJournal/FoodInfo.html", context=ctx)
+        except KeyError:
+            self.object_list = self.queryset
+            ctx = self.get_context_data(**kwargs)
+            errors = ["All foods must have a description."]
+            ctx["errors"] = errors
+            return render(request, "FoodJournal/FoodInfo.html", context=ctx)
         divisor = float(request.POST.get("measurement_qty_input", None))
         if divisor and divisor > 0:
             calories_unit = float(request.POST.get("calorie_input")) / divisor
@@ -156,7 +173,7 @@ class FoodInfo(ListView):
             sat_fat_unit =  float(request.POST.get("sat_fat_input")) / divisor
             fiber_unit =    float(request.POST.get("fiber_input")) / divisor
             form = AddFood({
-                "description":      request.POST.get("food_input"),
+                "description":      request.POST.get("food_input").lower(),
                 "calories_unit":    calories_unit,
                 "protein_unit":     protein_unit,
                 "carbs_unit":       carbs_unit,
@@ -179,8 +196,7 @@ class FoodInfo(ListView):
 def get_food_json(request, food, *args, **kwargs):
     logger.info(f"Getting json for {food}...")
     if request.method == "GET":
-        food_name = clean_input(food)
-        food_data = get_food_model(food_name)
+        food_data = get_food_model(food)
         return JsonResponse(food_data)
 
 
