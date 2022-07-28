@@ -37,6 +37,9 @@
                     <td>{{row.sat_fat_unit}}</td>
                     <td>{{row.fiber_unit}}</td>
                     <td>{{row.measurement_unit.description}}</td>
+                    {% if user.is_staff %}
+                    <td><a href="/admin/FoodJournal/foods/{{row.id}}/change/">Edit</a></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
             </table>

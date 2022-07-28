@@ -3,6 +3,9 @@ from django.db.models.deletion import CASCADE, SET_NULL
 from django.contrib.auth.models import User
 import csv
 from sqlite3 import IntegrityError
+import logging
+
+logger = logging.getLogger(__name__)
 
 file_path = './csv/RawFoodData.csv'
 food_description = 0
@@ -112,5 +115,6 @@ def get_food_model(food:str)->dict:
             }
         return food_dict
     except Foods.DoesNotExist:
+        logger.error(f"{food} is not in database")
         error_dict = {"error": f"{food} is not in database."}
         return error_dict

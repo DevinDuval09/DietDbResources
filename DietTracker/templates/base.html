@@ -10,8 +10,9 @@
             <ul id="control-bar">
                 {% if user.is_authenticated %}
                     {% if user.is_staff %}<li><a href="{% url 'admin:index' %}">admin</a></li>{% endif %}
+                        <li><a href="/">Home</a></li>
                         <li><a href="{% url 'user_meals' request.user.username %}">Add Meal</a></li>
-                        <li><a href="{% url 'user_home' request.user.username %}">Eaten Food</a></li>
+                        <li><a href="{% url 'user_summary' request.user.username %}">Summary</a></li>
                             <li><a href="{% url 'logout' %}">logout</a></li>
                 {% else %}
                     <li><a href="{% url 'login' %}">login</a></li>

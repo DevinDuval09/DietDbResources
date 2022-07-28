@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-<a href="/">Home</a>
 <h1>Meals</h1>
     <div class="date_range">
     <p><label for="start_date">Start Date:</label>
@@ -11,11 +10,17 @@
     <div id="food_info">
         <table class>
             <tr>
-                <th>Date</th><th>Food</th><th>Quantity</th><th>Calories</th>
+                <th>Link</th><th>Date</th><th>Food</th><th>Quantity</th><th>Calories</th>
             </tr>
+            {% load FoodJournal_extras %}
             {% for item in object_list %}
-            {% widthratio item.food.calories_unit 1 item.qty as calories %}
-            <tr><td>{{item.cdate}}</td><td>{{item.food.description}}</td><td>{{item.qty}}</td><td>{{calories}}</td></tr>
+            <tr>
+                <td><a href="/FoodJournal/{{item.user.username}}/meals/{{item.id}}/">Edit</a></td>
+                <td>{{item.cdate}}</td>
+                <td>{{item.food.description}}</td>
+                <td>{{item.qty}}</td>
+                <td>{{item.food.calories_unit|multiply:item.qty}}</td>
+            </tr>
             {% endfor %}
         </table>
     </div>

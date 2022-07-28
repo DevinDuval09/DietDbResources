@@ -6,4 +6,5 @@ passwords.txt
 */__pycache__/
 */management/commands/__pycache__/
 */migrations/__pycache__/
+*/templatetags/__pycache__/
 key.txt
