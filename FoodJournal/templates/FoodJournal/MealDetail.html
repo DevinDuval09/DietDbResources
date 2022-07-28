@@ -1,0 +1,15 @@
+
+{% extends "base.html" %}
+{% block content %}
+<h1>Meal {{meal.id}}</h1>
+    <div>
+        <form name="meal_info" method="post">
+            {% load FoodJournal_extras %}
+            <label for="date_input">Date:</lablel>> <input name="date_input" type="date" value="{{object.cdate}}">
+            <label for="food_input">Food:</lablel>> <input name="food_input" type=text readonly="true" value="{{object.food.description}}">
+            <label for="qty_input">Quantity:</label> <input name="qty_input" type="number" step=.25 value="{{object.qty}}"> 
+            <label>Total calories: {{object.food.calories_unit|multiply:object.qty}}</label>
+            <p><button type="submit" class="btn btn-default"&gt;>Submit</button></p> 
+        </form>
+    </div>
+{% endblock %}
