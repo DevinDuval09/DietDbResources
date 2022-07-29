@@ -308,6 +308,28 @@ class FoodJournalTests(TestCase):
         meal_obj.refresh_from_db()
         self.assertEquals(int(meal_obj.qty), qty_eaten + 1)
 
+    def test_FoodInfo_post_over_6digits(self):
+        curr_user = User.objects.create(username="user")
+        curr_user.set_password("12345")
+        curr_user.save()
+        login = self.client.login(username="user", password="12345")
+        self.assertTrue(login)
+        self.assertRaises(Foods.DoesNotExist, Foods.objects.get, description="white cake")
+        food = {
+                "food_input":       "white cake",
+                "calorie_input":    357,
+                "protein_input":     5.4,
+                "carbs_input":       57.2,
+                "total_fat_input":   12.4,
+                "sat_fat_input":     3.3,
+                "fiber_input":       .8,
+                "measurement_input": 1,
+                "measurement_qty_input": 100
+            }
+        post = self.client.post(f"/FoodInfo/", food, follow=True)
+        obj = Foods.objects.get(description="white cake")
+        self.assertTrue(obj)
+
 
 
 
