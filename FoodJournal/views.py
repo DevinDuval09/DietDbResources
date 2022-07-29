@@ -172,11 +172,12 @@ class FoodInfo(ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        logger.info(f"{request.user.id}")
+        logger.info(f"\nPOST request:")
         logger.info(request.POST)
         if (request.user.id is None):
             redirect("/login/")
         errors = None
+        errors_html = None
         try:
             if not _validate_food_name(request.POST.get("food_input")):
                 self.object_list = self.queryset
@@ -192,12 +193,12 @@ class FoodInfo(ListView):
             return render(request, "FoodJournal/FoodInfo.html", context=ctx)
         divisor = float(request.POST.get("measurement_qty_input", None))
         if divisor and divisor > 0:
-            calories_unit = float(request.POST.get("calorie_input")) / divisor
-            protein_unit =  float(request.POST.get("protein_input")) / divisor
-            carbs_unit =    float(request.POST.get("carbs_input")) / divisor
-            total_fat_unit =float(request.POST.get("total_fat_input")) / divisor
-            sat_fat_unit =  float(request.POST.get("sat_fat_input")) / divisor
-            fiber_unit =    float(request.POST.get("fiber_input")) / divisor
+            calories_unit = round(float(request.POST.get("calorie_input")) / divisor, 6)
+            protein_unit =  round(float(request.POST.get("protein_input")) / divisor, 6)
+            carbs_unit =    round(float(request.POST.get("carbs_input")) / divisor, 6)
+            total_fat_unit =round(float(request.POST.get("total_fat_input")) / divisor, 6)
+            sat_fat_unit =  round(float(request.POST.get("sat_fat_input")) / divisor, 6)
+            fiber_unit =    round(float(request.POST.get("fiber_input")) / divisor, 6)
             form = AddFood({
                 "description":      request.POST.get("food_input").lower(),
                 "calories_unit":    calories_unit,
@@ -210,12 +211,19 @@ class FoodInfo(ListView):
             })
             if form.is_valid():
                 form.save()
+            else:
+                logger.info("Form errors:")
+                logger.info(form.errors)
+                errors_html = form.errors
         else:
             errors = ["Measurement quantity must be above 0."]
-        if errors:
+        if errors or errors_html:
             self.object_list = self.queryset
             ctx = self.get_context_data(**kwargs)
-            ctx["errors"] = errors
+            if errors:
+                ctx["errors"] = errors
+            if errors_html:
+                ctx["errors_list"] = errors_html
             return render(request, "FoodJournal/FoodInfo.html", context=ctx)
         return redirect(reverse("food_index"))
 
