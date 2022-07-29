@@ -16,6 +16,7 @@ let sat_fat_summary = {"element": document.getElementById("avg_sat_fat"),
 summaries.push(sat_fat_summary)
 let fiber_summary = {"element":document.getElementById("avg_fiber"),
                     "values": document.getElementsByName("fiber")};
+summaries.push(fiber_summary);
 
 function post_summaries(sum_array) {
     for (let i = 0; i < sum_array.length; ++i){
